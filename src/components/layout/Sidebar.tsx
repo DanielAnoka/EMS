@@ -1,37 +1,108 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  Building, 
-  CreditCard, 
-  Settings, 
+import React, { type SVGProps } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Home,
+  Users,
+  Building,
+  CreditCard,
+  Settings,
   Shield,
   UserCog,
   BarChart3,
   Bell,
-  AlertTriangle
-} from 'lucide-react';
+  AlertTriangle,
+} from "lucide-react";
+import { ROLE_NAME_BY_ID, type UserRole } from "../../types/auth";
+import { useAuth } from "../../hooks/useAuth";
 
 interface MenuItem {
   id: string;
   name: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<SVGProps<SVGSVGElement>>;
   roles: UserRole[];
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'dashboard', name: 'Dashboard', icon: Home, roles: ['super_admin', 'estate_admin', 'landlord', 'tenant', 'caretaker', 'agent'] },
-  { id: 'users', name: 'User Management', icon: Users, roles: ['super_admin', 'estate_admin'] },
-  { id: 'estates', name: 'Estate Management', icon: Building, roles: ['super_admin'] },
-  { id: 'properties', name: 'Properties', icon: Building, roles: ['super_admin', 'estate_admin', 'landlord', 'caretaker'] },
-  { id: 'charges', name: 'Charges', icon: CreditCard, roles: ['super_admin', 'estate_admin'] },
-  { id: 'payments', name: 'Payments', icon: CreditCard, roles: ['landlord', 'tenant'] },
-  { id: 'defaulters', name: 'Defaulters', icon: AlertTriangle, roles: ['super_admin', 'estate_admin'] },
-  { id: 'reports', name: 'Reports', icon: BarChart3, roles: ['super_admin', 'estate_admin'] },
-  { id: 'notifications', name: 'Notifications', icon: Bell, roles: ['super_admin', 'estate_admin'] },
-  { id: 'roles', name: 'Roles & Permissions', icon: Shield, roles: ['super_admin'] },
-  { id: 'settings', name: 'Settings', icon: Settings, roles: ['super_admin', 'estate_admin', 'landlord', 'tenant', 'caretaker', 'agent'] },
+  {
+    id: "dashboard",
+    name: "Dashboard",
+    icon: Home,
+    roles: [
+      "super_admin",
+      "estate_admin",
+      "landlord",
+      "tenant",
+      "caretaker",
+      "agent",
+    ],
+  },
+  {
+    id: "users",
+    name: "User Management",
+    icon: Users,
+    roles: ["super_admin", "estate_admin"],
+  },
+  {
+    id: "estates",
+    name: "Estate Management",
+    icon: Building,
+    roles: ["super_admin"],
+  },
+  {
+    id: "properties",
+    name: "Properties",
+    icon: Building,
+    roles: ["super_admin", "estate_admin", "landlord", "caretaker"],
+  },
+  {
+    id: "charges",
+    name: "Charges",
+    icon: CreditCard,
+    roles: ["super_admin", "estate_admin"],
+  },
+  {
+    id: "payments",
+    name: "Payments",
+    icon: CreditCard,
+    roles: ["landlord", "tenant"],
+  },
+  {
+    id: "defaulters",
+    name: "Defaulters",
+    icon: AlertTriangle,
+    roles: ["super_admin", "estate_admin"],
+  },
+  {
+    id: "reports",
+    name: "Reports",
+    icon: BarChart3,
+    roles: ["super_admin", "estate_admin"],
+  },
+  {
+    id: "notifications",
+    name: "Notifications",
+    icon: Bell,
+    roles: ["super_admin", "estate_admin"],
+  },
+  {
+    id: "roles",
+    name: "Roles & Permissions",
+    icon: Shield,
+    roles: ["super_admin"],
+  },
+  {
+    id: "settings",
+    name: "Settings",
+    icon: Settings,
+    roles: [
+      "super_admin",
+      "estate_admin",
+      "landlord",
+      "tenant",
+      "caretaker",
+      "agent",
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -39,20 +110,23 @@ interface SidebarProps {
   onMobileMenuClose: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ 
-  isMobileMenuOpen, 
-  onMobileMenuClose 
+export const Sidebar: React.FC<SidebarProps> = ({
+  isMobileMenuOpen,
+  onMobileMenuClose,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
-   const filteredMenuItems = menuItems.filter(item => 
-    user && item.roles.includes(user.role)
+  const filteredMenuItems = menuItems.filter(
+    (item) => user && item.roles.includes(ROLE_NAME_BY_ID[user.role_id])
   );
 
-   const handleItemClick = (itemId: string) => {
-    if (itemId === 'dashboard') {
-      navigate('/dashboard');
+  console.log(filteredMenuItems);
+
+  const handleItemClick = (itemId: string) => {
+    if (itemId === "dashboard") {
+      navigate("/dashboard");
     } else {
       navigate(`/dashboard/${itemId}`);
     }
@@ -61,31 +135,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/dashboard' || path === '/dashboard/') {
-      return 'dashboard';
+    if (path === "/dashboard" || path === "/dashboard/") {
+      return "dashboard";
     }
-    const segments = path.split('/');
-    return segments[segments.length - 1] || 'dashboard';
+    const segments = path.split("/");
+    return segments[segments.length - 1] || "dashboard";
   };
 
   const activeTab = getActiveTab();
 
   return (
-   <>
+    <>
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onMobileMenuClose}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
+      <div
+        className={`
         fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
         lg:relative lg:translate-x-0 lg:shadow-none
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200">
@@ -104,9 +180,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <UserCog className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-gray-900">{user?.name}</div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {user?.name}
+                </div>
                 <div className="text-xs text-gray-500 capitalize">
-                  {user?.role.replace('_', ' ')}
+                  {ROLE_NAME_BY_ID[user?.role_id || 1].replace("_", " ")}
                 </div>
               </div>
             </div>
@@ -117,16 +195,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
-              
+
               return (
                 <button
                   key={item.id}
                   onClick={() => handleItemClick(item.id)}
                   className={`
                     w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors duration-150
-                    ${isActive 
-                      ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 border-r-2 border-blue-600"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }
                   `}
                 >

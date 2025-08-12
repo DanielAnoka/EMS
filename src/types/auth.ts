@@ -1,6 +1,6 @@
 
 export type RoleId = 1 | 2 | 3 | 4;
-export type UserRole = 'super_admin' | 'admin' | 'estate_admin' | 'tenant';
+export type UserRole = 'super_admin' | 'admin' | 'estate_admin' | 'tenant' | 'landlord' | 'caretaker' | 'agent';
 
 export const ROLE_NAME_BY_ID: Record<RoleId, UserRole> = {
   1: 'super_admin',

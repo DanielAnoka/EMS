@@ -1,33 +1,20 @@
 import {
-  BrowserRouter as Router,
-  Routes,
   Route,
+  Routes,
   Navigate,
+  BrowserRouter as Router,
 } from "react-router-dom";
-import LandingPage from "./components/landing/LandingPage";
-import Login from "./components/auth/Login";
-import ForgotPassword from "./components/auth/forgotten-password";
-import {AuthProvider } from "./context/AuthProvider";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import MainLayout from "./components/layout/MainLayout";
+import { createRoutes, routes } from "./_routes";
+import { AuthProvider } from "./context/AuthProvider";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          {createRoutes(routes)}
 
-          <Route path="/dashboard/*" element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          } />
-
-          {/* Redirect any unknown routes to landing */}
+          {/* Redirect any unknown routes to landing if logged out, to dashboard if loggen in */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

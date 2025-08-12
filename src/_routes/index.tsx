@@ -1,0 +1,66 @@
+import type { JSX } from "react";
+import { Route } from "react-router-dom";
+import type { AppRoute } from "../types/_d";
+import Login from "../components/auth/Login";
+import PublicRoute from "../components/auth/Public";
+import UsersTest from "../components/auth/UsersTest";
+import MainLayout from "../components/layout/MainLayout";
+import Dashboard from "../components/dashboard/Dashboard";
+import LandingPage from "../components/landing/LandingPage";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
+import ForgotPassword from "../components/auth/forgotten-password";
+
+// APP ROUTES
+export const routes: AppRoute[] = [
+  { path: "/", element: LandingPage, protected: false },
+  { path: "/login", element: Login, protected: false },
+  { path: "/forgot-password", element: ForgotPassword, protected: false },
+
+  //protected
+  {
+    path: "/dashboard",
+    element: MainLayout,
+    protected: true,
+    children: [
+      { index: true, element: Dashboard, protected: true }, // "dashboard" (index) default view
+      { path: "users", element: UsersTest, protected: true }, // "/dashboard/users"
+    ],
+  },
+
+  // more route objects
+];
+
+// FUNCTION TO CREATE PROTECTED AND PUBLIC ROUTES
+export function createRoutes(routes: AppRoute[]): React.ReactNode {
+  return routes.map(
+    (
+      {
+        path,
+        element: Component,
+        protected: isProtected,
+        index: isIndex,
+        children,
+      },
+      idx
+    ) => {
+      let wrappedElement: JSX.Element = <Component />;
+
+      if (isProtected) {
+        wrappedElement = <ProtectedRoute>{<Component />}</ProtectedRoute>;
+      } else {
+        wrappedElement = <PublicRoute>{<Component />}</PublicRoute>;
+      }
+
+      // If it's an index route
+      if (isIndex) {
+        return <Route key={idx} index element={wrappedElement} />;
+      }
+
+      return (
+        <Route key={idx} path={path} element={wrappedElement}>
+          {children && createRoutes(children)}
+        </Route>
+      );
+    }
+  );
+}

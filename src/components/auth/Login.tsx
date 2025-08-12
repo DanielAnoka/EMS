@@ -21,12 +21,17 @@ const Login: React.FC = () => {
       return;
     }
 
+    console.log({ email, password });
+
     try {
       setIsLoading(true);
       await login({ email: email.trim(), password });
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password. Please try again.");
+      setError(
+        err.response?.data?.message ||
+          "Invalid email or password. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +81,11 @@ const Login: React.FC = () => {
                 />
               </div>
             </div>
-             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -85,7 +93,7 @@ const Login: React.FC = () => {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={password}
@@ -96,7 +104,7 @@ const Login: React.FC = () => {
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((s) => !s)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
@@ -119,12 +127,12 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-               <button
+            <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? "Signing in..." : "Sign In"}
             </button>
           </form>
         </div>
