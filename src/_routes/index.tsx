@@ -3,12 +3,13 @@ import { Route } from "react-router-dom";
 import type { AppRoute } from "../types/_d";
 import Login from "../components/auth/Login";
 import PublicRoute from "../components/auth/Public";
-import UsersTest from "../components/auth/UsersTest";
 import MainLayout from "../components/layout/MainLayout";
 import Dashboard from "../components/dashboard/Dashboard";
 import LandingPage from "../components/landing/LandingPage";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import ForgotPassword from "../components/auth/forgotten-password";
+import Estate from "../components/estate/estate";
+import UserManagement from "../components/users/UserManagement";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -22,8 +23,23 @@ export const routes: AppRoute[] = [
     element: MainLayout,
     protected: true,
     children: [
-      { index: true, element: Dashboard, protected: true }, // "dashboard" (index) default view
-      { path: "users", element: UsersTest, protected: true }, // "/dashboard/users"
+      { index: true, element: Dashboard, protected: true }, 
+    ],
+  },
+  {
+    path: "/estates",
+    element: MainLayout,
+    protected: true,
+    children: [
+      { index: true, element: Estate, protected: true }, 
+    ],
+  },
+  {
+    path: "/users",
+    element: MainLayout,
+    protected: true,
+    children: [
+      { index: true, element: UserManagement, protected: true }, 
     ],
   },
 

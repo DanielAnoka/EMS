@@ -27,14 +27,7 @@ const menuItems: MenuItem[] = [
     id: "dashboard",
     name: "Dashboard",
     icon: Home,
-    roles: [
-      "super_admin",
-      "estate_admin",
-      "landlord",
-      "tenant",
-      "caretaker",
-      "agent",
-    ],
+    roles: ["super_admin", "estate_admin", "tenant"],
   },
   {
     id: "users",
@@ -52,7 +45,7 @@ const menuItems: MenuItem[] = [
     id: "properties",
     name: "Properties",
     icon: Building,
-    roles: ["super_admin", "estate_admin", "landlord", "caretaker"],
+    roles: ["super_admin", "estate_admin"],
   },
   {
     id: "charges",
@@ -64,7 +57,7 @@ const menuItems: MenuItem[] = [
     id: "payments",
     name: "Payments",
     icon: CreditCard,
-    roles: ["landlord", "tenant"],
+    roles: ["tenant"],
   },
   {
     id: "defaulters",
@@ -94,14 +87,7 @@ const menuItems: MenuItem[] = [
     id: "settings",
     name: "Settings",
     icon: Settings,
-    roles: [
-      "super_admin",
-      "estate_admin",
-      "landlord",
-      "tenant",
-      "caretaker",
-      "agent",
-    ],
+    roles: ["super_admin", "estate_admin", "tenant"],
   },
 ];
 
@@ -128,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (itemId === "dashboard") {
       navigate("/dashboard");
     } else {
-      navigate(`/dashboard/${itemId}`);
+      navigate(`${itemId}`);
     }
     onMobileMenuClose();
   };
@@ -199,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleItemClick(item.id)}
+                  onClick={() => handleItemClick(`/${item.id}`)}
                   className={`
                     w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors duration-150
                     ${

@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
-  value: string;
+  value: number | string;  
   icon: LucideIcon;
   trend?: string;
   trendDirection?: "up" | "down";

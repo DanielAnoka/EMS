@@ -1,6 +1,6 @@
 
 export type RoleId = 1 | 2 | 3 | 4;
-export type UserRole = 'super_admin' | 'admin' | 'estate_admin' | 'tenant' | 'landlord' | 'caretaker' | 'agent';
+export type UserRole = 'super_admin' | 'admin' | 'estate_admin' | 'tenant' ;
 
 export const ROLE_NAME_BY_ID: Record<RoleId, UserRole> = {
   1: 'super_admin',
@@ -26,4 +26,13 @@ export type LoginPayload = {
 export type LoginResponse = {
   token: string; 
   user: User;
+};
+
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  phone_number: number;
+  password: string;
+  role_id: RoleId;
 };

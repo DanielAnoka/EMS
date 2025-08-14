@@ -1,6 +1,8 @@
 import axiosInstance from "../utils/axiosInstance";
 import { storage } from "../utils/storage";
 import type { LoginPayload, LoginResponse, User } from "../types/auth";
+import { useMutation } from "@tanstack/react-query";
+import { type RegisterPayload } from "../types/auth";
 
 // Add auth token to requests
 axiosInstance.interceptors.request.use((config) => {
@@ -54,4 +56,13 @@ export const authService = {
   resetPassword: async (token: string, password: string): Promise<void> => {
     await axiosInstance.post("/reset-password", { token, password });
   },
+};
+
+export const useRegister = () => {
+  return useMutation({
+    mutationFn: async (payload: RegisterPayload) => {
+      const response = await axiosInstance.post("/register", payload);
+      return response.data;
+    },
+  });
 };
