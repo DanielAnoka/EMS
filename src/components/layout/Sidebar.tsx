@@ -27,31 +27,31 @@ const menuItems: MenuItem[] = [
     id: "dashboard",
     name: "Dashboard",
     icon: Home,
-    roles: ["super_admin", "estate_admin", "tenant"],
+    roles: ["super_admin", "estate_admin", "tenant", "admin"],
   },
   {
     id: "users",
     name: "User Management",
     icon: Users,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "admin"],
   },
   {
     id: "estates",
     name: "Estate Management",
     icon: Building,
-    roles: ["super_admin"],
+    roles: ["super_admin", "admin"],
   },
   {
     id: "properties",
     name: "Properties",
     icon: Building,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "estate_admin", "admin"],
   },
   {
     id: "charges",
     name: "Charges",
     icon: CreditCard,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "estate_admin", "admin"],
   },
   {
     id: "payments",
@@ -63,19 +63,19 @@ const menuItems: MenuItem[] = [
     id: "defaulters",
     name: "Defaulters",
     icon: AlertTriangle,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "estate_admin", "admin"],
   },
   {
     id: "reports",
     name: "Reports",
     icon: BarChart3,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "estate_admin","admin"],
   },
   {
     id: "notifications",
     name: "Notifications",
     icon: Bell,
-    roles: ["super_admin", "estate_admin"],
+    roles: ["super_admin", "estate_admin", "tenant", "admin"],
   },
   {
     id: "roles",
@@ -87,7 +87,7 @@ const menuItems: MenuItem[] = [
     id: "settings",
     name: "Settings",
     icon: Settings,
-    roles: ["super_admin", "estate_admin", "tenant"],
+    roles: ["super_admin", "estate_admin",],
   },
 ];
 

@@ -32,7 +32,7 @@ export type LoginResponse = {
 export type RegisterPayload = {
   name: string;
   email: string;
-  phone_number: number;
+
   password: string;
   role_id: RoleId;
 };

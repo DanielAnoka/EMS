@@ -2,16 +2,22 @@ import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
 import { useGetUsers } from "../../services/users-service";
 import { UserCard } from "./UserCard";
-import { type User } from "../../types/auth";
+import { type RegisterPayload, type User } from "../../types/auth";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
 import { LoadingSpinner } from "../ui/Loaders";
+import { useRegister } from "../../services/auth-service";
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const { data, isLoading } = useGetUsers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { mutate: registerUser } = useRegister();
+
+  const handleAddUser = (user: Omit<RegisterPayload, "id" | "created_at">) => {
+    registerUser(user);
+  };
 
   let filteredUsers = data?.filter((user: User) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -23,7 +29,7 @@ const UserManagement = () => {
     );
   }
 
-  if (isLoading) return  <LoadingSpinner size="lg" color="blue" fullScreen />;
+  if (isLoading) return <LoadingSpinner size="lg" color="blue" fullScreen />;
 
   return (
     <>
@@ -53,7 +59,6 @@ const UserManagement = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 ">
-
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -106,6 +111,8 @@ const UserManagement = () => {
       <AddUserModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddUser}
+        allowedRoles={["super_admin", "admin", "estate_admin", "tenant"]} 
       />
     </>
   );
