@@ -31,6 +31,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     admin: "Admin",
     estate_admin: "Estate Admin",
     tenant: "Tenant",
+    landlord: "Landlord",
   };
 
   const handleChange = (key: keyof typeof form, value: string) => {

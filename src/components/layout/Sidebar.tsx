@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
     id: "users",
     name: "User Management",
     icon: Users,
-    roles: ["super_admin", "admin"],
+    roles: ["super_admin", "admin","estate_admin"],
   },
   {
     id: "estates",
