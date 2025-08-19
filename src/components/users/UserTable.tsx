@@ -1,6 +1,6 @@
 import React from "react";
 import { ROLE_NAME_BY_ID, type User } from "../../types/auth";
-import { Mail, Edit } from "lucide-react";
+import { Mail } from "lucide-react";
 
 interface UserTableProps {
   users: User[];
@@ -16,11 +16,7 @@ const roleColors: Record<number, string> = {
   5: "bg-red-100 text-red-800",
 };
 
-export const UserTable: React.FC<UserTableProps> = ({
-  users,
-  onEdit,
-  canEdit = false,
-}) => {
+export const UserTable: React.FC<UserTableProps> = ({ users }) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
       <table className="w-full text-sm text-left text-gray-600">
@@ -30,14 +26,12 @@ export const UserTable: React.FC<UserTableProps> = ({
             <th className="px-6 py-3">Name</th>
             <th className="px-6 py-3">Role</th>
             <th className="px-6 py-3">Email</th>
-            <th className="px-6 py-3">Status</th>
+
             <th className="px-6 py-3">Joined</th>
-            {canEdit && <th className="px-6 py-3 text-right">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {users.map((user, index) => {
-            const isActive = true;
             return (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 font-medium text-gray-900">
@@ -63,18 +57,6 @@ export const UserTable: React.FC<UserTableProps> = ({
                   <span>{user.email}</span>
                 </td>
 
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {isActive ? "Active" : "Inactive"}
-                  </span>
-                </td>
-
                 <td className="px-6 py-4 text-gray-500">
                   {new Date(user.created_at || "").toLocaleDateString("en-US", {
                     year: "numeric",
@@ -82,18 +64,6 @@ export const UserTable: React.FC<UserTableProps> = ({
                     day: "numeric",
                   })}
                 </td>
-
-                {canEdit && (
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => onEdit?.(user)}
-                      className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors duration-150 flex items-center justify-center"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
-                    </button>
-                  </td>
-                )}
               </tr>
             );
           })}

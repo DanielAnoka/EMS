@@ -2,13 +2,14 @@ import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
 import { useGetUsers } from "../../services/users-service";
 import { UserTable } from "./UserTable";
-import { type RegisterPayload, type User } from "../../types/auth";
+import { type RegisterPayload, type User, ROLE_NAME_BY_ID } from "../../types/auth";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
 import { useRegister } from "../../services/auth-service";
 import { TableSkeleton } from "../ui/TableSkeleton";
 import { Toast } from "../ui/Toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../hooks/useAuth"; // ✅ make sure path is correct
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
@@ -26,6 +27,9 @@ const UserManagement = () => {
     type: "success",
     isVisible: false,
   });
+
+  const { user } = useAuth();
+  const currentRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
 
   const handleAddUser = (user: Omit<RegisterPayload, "id" | "created_at">) => {
     registerUser(user, {
@@ -47,14 +51,28 @@ const UserManagement = () => {
       },
     });
   };
-  let filteredUsers: User[] = (data ?? []).filter((user: User) =>
+
+
+  let filteredUsers: User[] = data ?? [];
+
+ 
+  if (currentRole === "admin") {
+    filteredUsers = filteredUsers.filter((u) => u.role_id !== 1); 
+  }
+
+
+ 
+  filteredUsers = filteredUsers.filter((user: User) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+ 
   if (filterRole !== "all") {
     filteredUsers = filteredUsers.filter(
       (user: User) => user.role_id === Number(filterRole)
     );
   }
+
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
@@ -72,18 +90,20 @@ const UserManagement = () => {
               Manage system users and their permissions
             </p>
           </div>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add User
-          </button>
+          {currentRole !== "tenant" && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add User
+            </button>
+          )}
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card label="Total Users" value={data?.length || 0} icon={Users} />
+          <Card label="Total Users" value={filteredUsers.length || 0} icon={Users} />
         </div>
 
         {/* Filters */}
@@ -131,18 +151,16 @@ const UserManagement = () => {
         )}
 
         <div className="mt-6">
-          {filteredUsers.length > 0 && (
-            <>
-              {isLoading ? (
-                <TableSkeleton rows={8} showActions />
-              ) : (
-                <UserTable
-                  users={filteredUsers}
-                  canEdit
-                  onEdit={(user) => console.log("Edit", user)}
-                />
-              )}
-            </>
+          {isLoading ? (
+            <TableSkeleton rows={8} showActions />
+          ) : (
+            filteredUsers.length > 0 && (
+              <UserTable
+                users={filteredUsers}
+                canEdit
+                onEdit={(user) => console.log("Edit", user)}
+              />
+            )
           )}
         </div>
       </div>

@@ -30,7 +30,6 @@ const Estate: React.FC = () => {
       type: "success",
       isVisible: true,
     });
-    
   };
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));

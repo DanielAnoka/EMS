@@ -8,8 +8,9 @@ import Dashboard from "../components/dashboard/Dashboard";
 import LandingPage from "../components/landing/LandingPage";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import ForgotPassword from "../components/auth/forgotten-password";
-import Estate from "../components/estate/estate";
+import EstateManagement from "../components/estate/estate";
 import UserManagement from "../components/users/UserManagement";
+import PropertyManagement from "../components/properties/PropertyManagement";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -31,17 +32,25 @@ export const routes: AppRoute[] = [
     element: MainLayout,
     protected: true,
     children: [
-      { index: true, element: Estate, protected: true }, 
+      { index: true, element: EstateManagement, protected: true }, 
     ],
   },
-  {
-    path: "/users",
-    element: MainLayout,
-    protected: true,
-    children: [
-      { index: true, element: UserManagement, protected: true }, 
-    ],
-  },
+    {
+      path: "/users",
+      element: MainLayout,
+      protected: true,
+      children: [
+        { index: true, element: UserManagement, protected: true }, 
+      ],
+    },
+    {
+      path: "/properties",
+      element: MainLayout,
+      protected: true,
+      children: [
+        { index: true, element: PropertyManagement, protected: true }, 
+      ],
+    },
 
   // more route objects
 ];
