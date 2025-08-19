@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import { type RegisterPayload, type UserRole, ROLE_NAME_BY_ID,type RoleId } from "../../types/auth";
+import {
+  type RegisterPayload,
+  type UserRole,
+  ROLE_NAME_BY_ID,
+  type RoleId,
+} from "../../types/auth";
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
 
@@ -23,7 +28,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     password: "",
     role: "" as UserRole | "",
   });
-
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   if (!isOpen) return null;
 
   const roleLabels: Record<UserRole, string> = {
@@ -40,9 +45,26 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email|| !form.password || !form.role) {
-      return;
-    }
+
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = "Name is required";
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    if (!form.password.trim()) newErrors.password = "Password is required";
+    if (!form.role.trim()) newErrors.role = "Role is required";
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(form.email))
+      newErrors.email = "Enter a valid email";
+
+  if (Object.keys(newErrors).length > 0) {
+  setErrors(newErrors);
+
+  
+  setTimeout(() => {
+    setErrors({});
+  }, 1000);
+
+  return;
+}
 
     // Convert UserRole to RoleId
     const roleId = (Object.keys(ROLE_NAME_BY_ID) as unknown as RoleId[]).find(
@@ -56,7 +78,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       email: form.email,
       password: form.password,
       role_id: roleId,
-    } );
+    });
 
     setForm({ name: "", email: "", password: "", role: "" });
     onClose();
@@ -83,6 +105,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             value={form.name}
             onChange={(value) => handleChange("name", value)}
             required
+            error={errors.name}
           />
           <InputField
             label="Email Address"
@@ -90,15 +113,21 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             placeholder="Enter email address"
             value={form.email}
             onChange={(value) => handleChange("email", value)}
-            required id={""}          />
-     
+            required
+            id={""}
+            error={errors.email}
+          />
+
           <InputField
             label="Password"
             type="password"
             placeholder="Enter password"
             value={form.password}
             onChange={(value) => handleChange("password", value)}
-            required id={""}          />
+            required
+            id={""}
+            error={errors.password}
+          />
           <RoleSelect
             label="Role"
             value={form.role}
@@ -106,6 +135,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             allowedRoles={allowedRoles}
             roleLabels={roleLabels}
             required
+            error={errors.role}
           />
           <div className="flex space-x-3 pt-4">
             <button

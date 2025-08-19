@@ -21,7 +21,7 @@ const Login: React.FC = () => {
       return;
     }
 
-    console.log({ email, password });
+    // console.log({ email, password });
 
     try {
       setIsLoading(true);

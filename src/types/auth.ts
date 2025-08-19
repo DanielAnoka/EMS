@@ -36,3 +36,4 @@ export type RegisterPayload = {
   password: string;
   role_id: RoleId;
 };
+

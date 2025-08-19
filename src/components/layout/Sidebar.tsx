@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
     id: "users",
     name: "User Management",
     icon: Users,
-    roles: ["super_admin", "admin","estate_admin"],
+    roles: ["super_admin", "admin",],
   },
   {
     id: "estates",
@@ -108,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     (item) => user && item.roles.includes(ROLE_NAME_BY_ID[user.role_id])
   );
 
-  console.log(filteredMenuItems);
+  // console.log(filteredMenuItems);
 
   const handleItemClick = (itemId: string) => {
     if (itemId === "dashboard") {

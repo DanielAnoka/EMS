@@ -1,35 +1,63 @@
 import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
 import { useGetUsers } from "../../services/users-service";
-import { UserCard } from "./UserCard";
+import { UserTable } from "./UserTable";
 import { type RegisterPayload, type User } from "../../types/auth";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
-import { LoadingSpinner } from "../ui/Loaders";
 import { useRegister } from "../../services/auth-service";
+import { TableSkeleton } from "../ui/TableSkeleton";
+import { Toast } from "../ui/Toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const { data, isLoading } = useGetUsers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { mutate: registerUser } = useRegister();
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+    isVisible: boolean;
+  }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
 
   const handleAddUser = (user: Omit<RegisterPayload, "id" | "created_at">) => {
-    registerUser(user);
-  };
+    registerUser(user, {
+      onSuccess: (newUser) => {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
 
-  let filteredUsers = data?.filter((user: User) =>
+        setToast({
+          message: `${newUser?.name ?? user.name} created successfully!`,
+          type: "success",
+          isVisible: true,
+        });
+      },
+      onError: () => {
+        setToast({
+          message: "Failed to create user.",
+          type: "error",
+          isVisible: true,
+        });
+      },
+    });
+  };
+  let filteredUsers: User[] = (data ?? []).filter((user: User) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   if (filterRole !== "all") {
-    filteredUsers = filteredUsers?.filter(
+    filteredUsers = filteredUsers.filter(
       (user: User) => user.role_id === Number(filterRole)
     );
   }
-
-  if (isLoading) return <LoadingSpinner size="lg" color="blue" fullScreen />;
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, isVisible: false }));
+  };
 
   return (
     <>
@@ -52,13 +80,14 @@ const UserManagement = () => {
             Add User
           </button>
         </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card label="Total Users" value={data?.length || 0} icon={Users} />
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 ">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -88,7 +117,8 @@ const UserManagement = () => {
           </div>
         </div>
 
-        {filteredUsers.length === 0 && (
+        {/* Empty State */}
+        {!isLoading && filteredUsers.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">👥</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -100,19 +130,35 @@ const UserManagement = () => {
           </div>
         )}
 
-        {/* Users Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers?.map((user: User) => (
-            <UserCard key={user.id} user={user} canEdit />
-          ))}
+        <div className="mt-6">
+          {filteredUsers.length > 0 && (
+            <>
+              {isLoading ? (
+                <TableSkeleton rows={8} showActions />
+              ) : (
+                <UserTable
+                  users={filteredUsers}
+                  canEdit
+                  onEdit={(user) => console.log("Edit", user)}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
 
+      {/* Add User Modal */}
       <AddUserModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
-        allowedRoles={["super_admin", "admin", "estate_admin", "tenant"]} 
+        allowedRoles={["super_admin", "admin", "estate_admin", "tenant"]}
+      />
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={handleCloseToast}
       />
     </>
   );
