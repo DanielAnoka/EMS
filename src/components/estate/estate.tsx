@@ -4,15 +4,20 @@ import Card from "../ui/card";
 import SearchBar from "../ui/search";
 import { useGetEstates } from "../../services/estates";
 import AddEstateModal from "./AddEstateModal";
-import type { Estate } from "../../types/estate";
 import { useCreateEstate } from "../../services/estates";
 import { Toast } from "../ui/Toast";
+import type { CreateEstate } from "../../types/estate";
+import EstateTable from "./EstateTable";
+import { TableSkeleton } from "../ui/TableSkeleton";
+import type { Estates } from "../../types/estate";
+import EstateLogin from "./EstateLogin";
 
 const Estate: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: estatesData } = useGetEstates();
+  const { data: estatesData, isLoading } = useGetEstates();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { mutate: createEstate } = useCreateEstate();
+
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -22,18 +27,45 @@ const Estate: React.FC = () => {
     type: "success",
     isVisible: false,
   });
+    const [createdEstate, setCreatedEstate] = useState<Estates | null>(null);
 
-  const handleSubmit = (estate: Estate) => {
-    createEstate(estate);
-    setToast({
-      message: `${estate.name} created successfully!`,
-      type: "success",
-      isVisible: true,
-    });
-  };
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
+
+  const handleSubmit = (estate: CreateEstate) => {
+    createEstate(estate, {
+      onSuccess: (data) => {
+        
+        setCreatedEstate(data);
+        setToast({
+          message: `${estate.name} created successfully!`,
+          type: "success",
+          isVisible: true,
+        });
+      },
+      onError: () => {
+        setToast({
+          message: `Failed to create estate`,
+          type: "error",
+          isVisible: true,
+        });
+      },
+    });
+  };
+
+    const filteredEstates: Estates[] =
+    estatesData?.filter((estate: Estates) => {
+      const term = searchTerm.toLowerCase();
+      return (
+        estate.name.toLowerCase().includes(term) ||
+        estate.owner.toLowerCase().includes(term) ||
+        estate.address.toLowerCase().includes(term) ||
+        estate.email.toLowerCase().includes(term) ||
+        estate.phone_number.toLowerCase().includes(term)
+      );
+    }) || [];
+
   return (
     <>
       <div className="space-y-6">
@@ -70,17 +102,49 @@ const Estate: React.FC = () => {
           onChange={setSearchTerm}
         />
       </div>
+
+          {/* Empty State */}
+        {!isLoading && filteredEstates?.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">🏠</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No estates found
+            </h3>
+            <p className="text-gray-600">
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
+        )}
+
+      <div className="mt-6">
+        {isLoading ? (
+          <TableSkeleton rows={8} showActions />
+        ) : (
+          <EstateTable estates={estatesData || []} />
+        )}
+      </div>
+
       <AddEstateModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleSubmit}
       />
+
+        {createdEstate && (
+        <EstateLogin
+          isOpen={!!createdEstate}
+          onClose={() => setCreatedEstate(null)}
+          estate={createdEstate}
+        />
+      )}
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={handleCloseToast}
       />
+
+    
     </>
   );
 };

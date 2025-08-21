@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
-import type { Estate } from "../types/estate";
+import type { CreateEstate } from "../types/estate";
 
 
 export const useGetEstates = () => {
@@ -15,7 +15,7 @@ export const useGetEstates = () => {
 
 export const useCreateEstate = () => {
   return useMutation({
-    mutationFn: async (payload: Estate) => {
+    mutationFn: async (payload: CreateEstate) => {
       const response = await axiosInstance.post("/estate/save", payload);
       return response.data;
     },

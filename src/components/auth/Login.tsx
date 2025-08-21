@@ -2,6 +2,7 @@ import { Eye, EyeOff, Lock, LogIn, Mail } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { AxiosError } from "axios";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -21,17 +22,19 @@ const Login: React.FC = () => {
       return;
     }
 
-    // console.log({ email, password });
-
     try {
       setIsLoading(true);
       await login({ email: email.trim(), password });
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Invalid email or password. Please try again."
-      );
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.message ||
+            "Invalid email or password. Please try again."
+        );
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }

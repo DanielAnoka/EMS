@@ -2,7 +2,7 @@ import React from "react";
 
 interface RoleSelectProps {
   label?: string;
-  value: string;
+  value: string ;
   onChange: (value: string) => void;
   allowedRoles: string[];
   roleLabels: Record<string, string>;

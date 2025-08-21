@@ -1,82 +1,94 @@
-import { Plus, X } from "lucide-react";
-import type { CreateEstate } from "../../types/estate";
+import { useEffect, useState } from "react";
+import { X, Save } from "lucide-react";
+import type { RoleId, User, UserRole } from "../../types/auth";
+import { ROLE_ID_BY_NAME, ROLE_LABELS, ROLE_NAME_BY_ID } from "../../types/auth";
 import InputField from "../ui/InputField";
-import { useState } from "react";
+import { RoleSelect } from "../ui/SelectField";
 
-interface AddEstateModalProps {
+interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (estate: CreateEstate) => void;
+  onEdit: (user: User) => void;
+  user: User | null;
+  allowedRoles: UserRole[];
 }
 
-const AddEstateModal: React.FC<AddEstateModalProps> = ({
+const EditUserModal: React.FC<EditUserModalProps> = ({
   isOpen,
   onClose,
-  onAdd,
+  onEdit,
+  user,
+  allowedRoles,
 }) => {
   const [form, setForm] = useState({
     name: "",
-    owner: "",
-    phone_number: "",
-    address: "",
     email: "",
+    password: "",
+    role: "" as UserRole | "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name || "",
+        email: user.email || "",
+        password: "",
+        role:
+          (ROLE_NAME_BY_ID[user.role_id] as UserRole) || ("" as UserRole | ""),
+      });
+    }
+  }, [user]);
+
+  if (!isOpen || !user) return null;
+
+
+
+  const handleChange = (key: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    if (!form.name.trim()) newErrors.name = "Estate name is required";
-    if (!form.owner.trim()) newErrors.owner = "Owner name is required";
-    if (!form.phone_number.trim())
-      newErrors.phone_number = "Phone number is required";
-    if (!form.address.trim()) newErrors.address = "Address is required";
+    if (!form.name.trim()) newErrors.name = "Name is required";
     if (!form.email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email))
       newErrors.email = "Enter a valid email";
+    if (!form.role.trim()) newErrors.role = "Role is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
 
       setTimeout(() => {
         setErrors({});
-      }, 1000);
+      }, 2000);
 
       return;
     }
 
-    onAdd({
-      ...form,
-      lga_id: 1,
-    });
+   const roleId = form.role ? ROLE_ID_BY_NAME[form.role] as RoleId : undefined;
+    if (!roleId) return;
 
-    setForm({
-      name: "",
-      owner: "",
-      phone_number: "",
-      address: "",
-      email: "",
+
+    onEdit({
+      ...user,
+      name: form.name,
+      email: form.email,
+      role_id: roleId!,
     });
 
     onClose();
   };
 
-  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Add New Estate
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">Edit User</h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-150"
@@ -85,57 +97,41 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
           </button>
         </div>
 
-        <form className="p-6 space-y-4" onSubmit={handleSubmit}>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <InputField
-            label="Estate Name"
+            label="Full Name"
             type="text"
             id="name"
-            placeholder="Enter name"
+            placeholder="Enter full name"
             value={form.name}
             onChange={(value) => handleChange("name", value)}
             required
             error={errors.name}
           />
+
           <InputField
-            label="Owner's Name"
-            type="text"
-            id="owner"
-            placeholder="Enter Owner's name"
-            value={form.owner}
-            onChange={(value) => handleChange("owner", value)}
-            required
-            error={errors.owner}
-          />
-          <InputField
-            label="Phone Number"
-            type="tel"
-            id="phone_number"
-            placeholder="Enter phone number"
-            value={form.phone_number}
-            onChange={(value) => handleChange("phone_number", value)}
-            required
-            error={errors.phone_number}
-          />
-          <InputField
-            label="Address"
-            type="text"
-            id="address"
-            placeholder="Enter address"
-            value={form.address}
-            onChange={(value) => handleChange("address", value)}
-            required
-            error={errors.address}
-          />
-          <InputField
-            label="Email"
+            label="Email Address"
             type="email"
             id="email"
-            placeholder="Enter email"
+            placeholder="Enter email address"
             value={form.email}
             onChange={(value) => handleChange("email", value)}
             required
             error={errors.email}
           />
+
+          <RoleSelect
+            label="Role"
+            value={form.role}
+            onChange={(value) => handleChange("role", value)}
+            allowedRoles={allowedRoles}
+            roleLabels={ROLE_LABELS}
+            required
+            error={errors.role}
+          />
+
+          {/* Actions */}
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
@@ -148,8 +144,8 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
               type="submit"
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center justify-center"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Estate
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
             </button>
           </div>
         </form>
@@ -158,4 +154,4 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
   );
 };
 
-export default AddEstateModal;
+export default EditUserModal;

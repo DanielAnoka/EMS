@@ -1,11 +1,13 @@
 import React from "react";
 import { ROLE_NAME_BY_ID, type User } from "../../types/auth";
-import { Mail } from "lucide-react";
+import { Mail, Edit, Eye } from "lucide-react";
 
 interface UserTableProps {
   users: User[];
   onEdit?: (user: User) => void;
+  onView?: (user: User) => void;
   canEdit?: boolean;
+  canView?: boolean;
 }
 
 const roleColors: Record<number, string> = {
@@ -16,7 +18,13 @@ const roleColors: Record<number, string> = {
   5: "bg-red-100 text-red-800",
 };
 
-export const UserTable: React.FC<UserTableProps> = ({ users }) => {
+export const UserTable: React.FC<UserTableProps> = ({
+  users,
+  onEdit,
+  onView,
+  canEdit = true,
+  canView = true,
+}) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
       <table className="w-full text-sm text-left text-gray-600">
@@ -26,8 +34,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users }) => {
             <th className="px-6 py-3">Name</th>
             <th className="px-6 py-3">Role</th>
             <th className="px-6 py-3">Email</th>
-
             <th className="px-6 py-3">Joined</th>
+            <th className="px-6 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -63,6 +71,27 @@ export const UserTable: React.FC<UserTableProps> = ({ users }) => {
                     month: "short",
                     day: "numeric",
                   })}
+                </td>
+
+                <td className="px-6 py-4 text-right flex justify-end space-x-3">
+                  {canView && (
+                    <button
+                      onClick={() => onView?.(user)}
+                      className="text-gray-500 hover:text-blue-600 transition"
+                      title="View user"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button
+                      onClick={() => onEdit?.(user)}
+                      className="text-gray-500 hover:text-green-600 transition"
+                      title="Edit user"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                  )}
                 </td>
               </tr>
             );

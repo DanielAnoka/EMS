@@ -2,19 +2,31 @@ import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
 import { useGetUsers } from "../../services/users-service";
 import { UserTable } from "./UserTable";
-import { type RegisterPayload, type User, ROLE_NAME_BY_ID } from "../../types/auth";
+import {
+  type RegisterPayload,
+  type User,
+  ROLE_ID_BY_NAME,
+  ROLE_LABELS,
+  ROLE_NAME_BY_ID,
+} from "../../types/auth";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
 import { useRegister } from "../../services/auth-service";
 import { TableSkeleton } from "../ui/TableSkeleton";
 import { Toast } from "../ui/Toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../hooks/useAuth"; // ✅ make sure path is correct
+import { useAuth } from "../../hooks/useAuth";
+import EditUserModal from "./UserEditModal";
+import { useEditUser } from "../../services/users-service";
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const editUserMutation = useEditUser(String(selectedUser?.id || ""));
+
   const { data, isLoading } = useGetUsers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { mutate: registerUser } = useRegister();
@@ -52,27 +64,45 @@ const UserManagement = () => {
     });
   };
 
+  const handleEditUser = (updatedUser: User) => {
+    if (!selectedUser) return;
+
+    editUserMutation.mutate(updatedUser, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+
+        setToast({
+          message: `${updatedUser.name} updated successfully!`,
+          type: "success",
+          isVisible: true,
+        });
+
+        setIsEditOpen(false);
+        setSelectedUser(null);
+      },
+      onError: () => {
+        setToast({
+          message: "Failed to update user.",
+          type: "error",
+          isVisible: true,
+        });
+      },
+    });
+  };
 
   let filteredUsers: User[] = data ?? [];
 
- 
   if (currentRole === "admin") {
-    filteredUsers = filteredUsers.filter((u) => u.role_id !== 1); 
+    filteredUsers = filteredUsers.filter((u) => u.role_id !== 1);
   }
-
-
- 
   filteredUsers = filteredUsers.filter((user: User) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
- 
   if (filterRole !== "all") {
     filteredUsers = filteredUsers.filter(
       (user: User) => user.role_id === Number(filterRole)
     );
   }
-
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
@@ -103,7 +133,11 @@ const UserManagement = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card label="Total Users" value={filteredUsers.length || 0} icon={Users} />
+          <Card
+            label="Total Users"
+            value={filteredUsers.length || 0}
+            icon={Users}
+          />
         </div>
 
         {/* Filters */}
@@ -128,10 +162,16 @@ const UserManagement = () => {
                 className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
                 <option value="all">All Roles</option>
-                <option value="1">Super Admin</option>
-                <option value="2">Admin</option>
-                <option value="3">Estate Admin</option>
-                <option value="4">Tenant</option>
+                {Object.entries(ROLE_LABELS).map(([role, label]) => (
+                  <option
+                    key={role}
+                    value={
+                      ROLE_ID_BY_NAME[role as keyof typeof ROLE_ID_BY_NAME]
+                    }
+                  >
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -158,7 +198,10 @@ const UserManagement = () => {
               <UserTable
                 users={filteredUsers}
                 canEdit
-                onEdit={(user) => console.log("Edit", user)}
+                onEdit={(user) => {
+                  setSelectedUser(user);
+                  setIsEditOpen(true);
+                }}
               />
             )
           )}
@@ -170,13 +213,32 @@ const UserManagement = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
-        allowedRoles={["super_admin", "admin", "estate_admin", "tenant"]}
+        allowedRoles={[
+          "super_admin",
+          "admin",
+          "estate_admin",
+          "tenant",
+          "landlord",
+        ]}
       />
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={handleCloseToast}
+      />
+      <EditUserModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onEdit={handleEditUser}
+        user={selectedUser as User}
+        allowedRoles={[
+          "super_admin",
+          "admin",
+          "estate_admin",
+          "tenant",
+          "landlord",
+        ]}
       />
     </>
   );

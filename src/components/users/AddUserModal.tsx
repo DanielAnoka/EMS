@@ -3,8 +3,8 @@ import { Plus, X } from "lucide-react";
 import {
   type RegisterPayload,
   type UserRole,
-  ROLE_NAME_BY_ID,
-  type RoleId,
+  ROLE_ID_BY_NAME,
+  ROLE_LABELS,
 } from "../../types/auth";
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
@@ -31,14 +31,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   if (!isOpen) return null;
 
-  const roleLabels: Record<UserRole, string> = {
-    super_admin: "Super Admin",
-    admin: "Admin",
-    estate_admin: "Estate Admin",
-    tenant: "Tenant",
-    landlord: "Landlord",
-  };
-
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -55,21 +47,19 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     else if (!/\S+@\S+\.\S+/.test(form.email))
       newErrors.email = "Enter a valid email";
 
-  if (Object.keys(newErrors).length > 0) {
-  setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
 
-  
-  setTimeout(() => {
-    setErrors({});
-  }, 1000);
+      setTimeout(() => {
+        setErrors({});
+      }, 1000);
 
-  return;
-}
+      return;
+    }
 
     // Convert UserRole to RoleId
-    const roleId = (Object.keys(ROLE_NAME_BY_ID) as unknown as RoleId[]).find(
-      (id) => ROLE_NAME_BY_ID[id] === form.role
-    );
+    const roleId = form.role ? ROLE_ID_BY_NAME[form.role] : undefined;
+    if (!roleId) return;
 
     if (!roleId) return;
 
@@ -133,7 +123,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             value={form.role}
             onChange={(value) => handleChange("role", value)}
             allowedRoles={allowedRoles}
-            roleLabels={roleLabels}
+            roleLabels={ROLE_LABELS}
             required
             error={errors.role}
           />
