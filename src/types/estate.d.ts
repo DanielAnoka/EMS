@@ -5,7 +5,19 @@ export type CreateEstate = {
   phone_number: string;
   address: string;
   email: string;
+  status: number | null;
 };
+
+export type CreateEstatePayload = {
+    status: string;
+    message: string;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        password: string;
+    }
+}
 
 export interface Estates {
   id: number;

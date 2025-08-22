@@ -9,3 +9,4 @@ export const qk = {
   notifications: ['notifications'] as const,
   dashboard: ['dashboard'] as const,
 } as const;
+

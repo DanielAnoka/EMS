@@ -7,6 +7,7 @@ interface CardProps {
   icon: LucideIcon;
   iconBgColor?: string;
   iconColor?: string;
+  bgColor?: string; 
 }
 
 const Card: React.FC<CardProps> = ({
@@ -15,9 +16,10 @@ const Card: React.FC<CardProps> = ({
   icon: Icon,
   iconBgColor = "bg-blue-100",
   iconColor = "text-blue-600",
+  bgColor = "bg-white", 
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className={`${bgColor} rounded-xl shadow-sm border border-gray-200 p-6`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{label}</p>

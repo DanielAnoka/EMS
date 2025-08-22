@@ -20,11 +20,12 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
     phone_number: "",
     address: "",
     email: "",
+    status: null as 1 | null,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | number | null) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
@@ -64,6 +65,7 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
       phone_number: "",
       address: "",
       email: "",
+      status: null,
     });
 
     onClose();
@@ -136,6 +138,24 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
             required
             error={errors.email}
           />
+
+          {/* Status */}
+          <input
+            id="isActive"
+            type="checkbox"
+            checked={form.status === 1}
+            onChange={(e) =>
+              handleChange("status", e.target.checked ? 1 : null)
+            }
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          />
+          <label
+            htmlFor="isActive"
+            className="ml-2 text-sm font-medium text-gray-700"
+          >
+            Active Estate
+          </label>
+
           <div className="flex space-x-3 pt-4">
             <button
               type="button"

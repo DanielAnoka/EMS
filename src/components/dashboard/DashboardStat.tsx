@@ -13,12 +13,14 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_NAME_BY_ID } from "../../types/auth";
 import { useGetUsers } from "../../services/users-service";
 import { useGetEstates } from "../../services/estates";
+import { useGetProperties } from "../../services/property";
 
 const DashboardStat: React.FC = () => {
   const { user } = useAuth();
   const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
   const { data } = useGetUsers();
   const { data: estatesData } = useGetEstates();
+  const { data: propertiesData } = useGetProperties();
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
@@ -49,12 +51,18 @@ const DashboardStat: React.FC = () => {
             color: estatesData?.length ? ("green" as const) : ("blue" as const),
           },
           {
-            title: "Monthly Revenue",
-            value: "₦2.4M",
-            icon: CreditCard,
-            trend: "+8% from last month",
-            trendDirection: "up" as const,
-            color: "purple" as const,
+            title: "Total Properties",
+            value: propertiesData?.length || 0,
+            icon: Building,
+            trend: propertiesData?.length
+              ? `+${propertiesData.length} new property${
+                  propertiesData.length > 1 ? "s" : ""
+                }`
+              : "No properties yet",
+            trendDirection: propertiesData?.length
+              ? ("up" as const)
+              : ("down" as const),
+            color: propertiesData?.length ? ("green" as const) : ("blue" as const),
           },
           {
             title: "System Alerts",

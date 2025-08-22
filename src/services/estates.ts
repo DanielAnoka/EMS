@@ -21,3 +21,13 @@ export const useCreateEstate = () => {
     },
   });
 };
+
+export const useGetEstateById = (estateId: string) => {
+  return useQuery({
+    queryKey: ["estate", estateId],
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/estate/${estateId}`);
+      return response.data;
+    },
+  });
+}
