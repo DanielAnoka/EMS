@@ -21,6 +21,7 @@ const DashboardStat: React.FC = () => {
   const { data } = useGetUsers();
   const { data: estatesData } = useGetEstates();
   const { data: propertiesData } = useGetProperties();
+  
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {

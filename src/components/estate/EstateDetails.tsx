@@ -52,7 +52,7 @@ const EstateDetails = ({
         </div>
 
         {/* Estate Information */}
-        {/* <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Estate Information
@@ -78,7 +78,7 @@ const EstateDetails = ({
               </div>
             </div>
           </div>
-        </div> */}
+        </div>
       </div>
     </div>
   );
