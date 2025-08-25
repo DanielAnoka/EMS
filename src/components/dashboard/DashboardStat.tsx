@@ -18,10 +18,24 @@ import { useGetProperties } from "../../services/property";
 const DashboardStat: React.FC = () => {
   const { user } = useAuth();
   const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
-  const { data } = useGetUsers();
-  const { data: estatesData } = useGetEstates();
-  const { data: propertiesData } = useGetProperties();
-  
+
+  // Only fetch what this role cares about
+  const enableUsers = userRole === "super_admin" || userRole === "admin";
+  const enableEstates =
+    userRole === "super_admin" ||
+    userRole === "admin" ;
+  const enableProperties = enableEstates;
+
+  const { data } = useGetUsers({ enabled: enableUsers });
+  const { data: estatesData } = useGetEstates({ enabled: enableEstates });
+  const { data: propertiesData } = useGetProperties({
+    enabled: enableProperties,
+  });
+
+
+   const userCount      = data?.length ?? 0;
+  const estateCount    = estatesData?.length ?? 0;
+  const propertyCount  = propertiesData?.length ?? 0;
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
@@ -29,50 +43,36 @@ const DashboardStat: React.FC = () => {
         return [
           {
             title: "Total Users",
-            value: data?.length || 0,
+            value: userCount,
             icon: Users,
-            trend: data?.length
-              ? `+${data.length} new user${data.length > 1 ? "s" : ""}`
-              : "No users yet",
-            trendDirection: data?.length ? ("up" as const) : ("down" as const),
-            color: data?.length ? ("green" as const) : ("blue" as const),
+        trend: userCount ? `+${userCount} new user${userCount > 1 ? "s" : ""}` : "No users yet",
+            trendDirection: userCount ? ("up" as const) : ("down" as const),
+            color: userCount ? ("green" as const) : ("blue" as const),
           },
           {
             title: "Total Estates",
-            value: estatesData?.length || 0,
+            value: estateCount,
             icon: Building,
-            trend: estatesData?.length
-              ? `+${estatesData.length} new estate${
-                  estatesData.length > 1 ? "s" : ""
-                }`
-              : "No estates yet",
-            trendDirection: estatesData?.length
-              ? ("up" as const)
-              : ("down" as const),
-            color: estatesData?.length ? ("green" as const) : ("blue" as const),
+           trend: estateCount ? `+${estateCount} new estate${estateCount > 1 ? "s" : ""}` : "No estates yet",
+            trendDirection: estateCount ? ("up" as const) : ("down" as const),
+            color: estateCount ? ("green" as const) : ("blue" as const),
           },
           {
             title: "Total Properties",
-            value: propertiesData?.length || 0,
+            value: propertyCount,
             icon: Building,
-            trend: propertiesData?.length
-              ? `+${propertiesData.length} new property${
-                  propertiesData.length > 1 ? "s" : ""
-                }`
-              : "No properties yet",
-            trendDirection: propertiesData?.length
-              ? ("up" as const)
-              : ("down" as const),
-            color: propertiesData?.length ? ("green" as const) : ("blue" as const),
+         trend: propertyCount ? `+${propertyCount} new property${propertyCount > 1 ? "s" : ""}` : "No properties yet",
+            trendDirection: propertyCount ? ("up" as const) : ("down" as const),
+            color: propertyCount ? ("green" as const) : ("blue" as const),
           },
-          {
-            title: "System Alerts",
-            value: "7",
-            icon: AlertTriangle,
-            trend: "3 resolved today",
-            trendDirection: "down" as const,
-            color: "red" as const,
-          },
+          // {
+          //   title: "System Alerts",
+          //   value: "7",
+          //   icon: AlertTriangle,
+          //   trend: "3 resolved today",
+          //   trendDirection: "down" as const,
+          //   color: "red" as const,
+          // },
         ];
 
       case "admin":
