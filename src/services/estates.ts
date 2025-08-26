@@ -1,16 +1,15 @@
 import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
-import type { CreateEstate } from "../types/estate";
+import type { CreateEstate, Estates } from "../types/estate";
 
 
-type Estates = Estates[];
-type EstatesQueryOpts = Partial<UseQueryOptions<Estates, Error>>;
+type EstatesQueryOpts = Partial<UseQueryOptions<Estates[], Error>>;
 
 export const useGetEstates = (opts?: EstatesQueryOpts) =>
-  useQuery<Estates, Error>({
+  useQuery<Estates[], Error>({
     queryKey: ["estates"],
     queryFn: async () => {
-      const { data } = await axiosInstance.get<Estates>("/estates");
+      const { data } = await axiosInstance.get<Estates[]>("/estates");
       return data;
     },
     staleTime: 60_000,
@@ -18,7 +17,6 @@ export const useGetEstates = (opts?: EstatesQueryOpts) =>
     retry: 1,
     ...opts,
   });
-
 
 // export const useGetEstates = () => {
 //   return useQuery({

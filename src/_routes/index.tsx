@@ -11,6 +11,7 @@ import ForgotPassword from "../components/auth/forgotten-password";
 import EstateManagement from "../components/estate/estate";
 import UserManagement from "../components/users/UserManagement";
 import PropertyManagement from "../components/properties/PropertyManagement";
+import Charges from "../components/charges/ChargeManagement";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -49,6 +50,14 @@ export const routes: AppRoute[] = [
       protected: true,
       children: [
         { index: true, element: PropertyManagement, protected: true }, 
+      ],
+    },
+    {
+      path: "/charges",
+      element: MainLayout,
+      protected: true,
+      children: [
+        { index: true, element: Charges, protected: true }, 
       ],
     },
 
