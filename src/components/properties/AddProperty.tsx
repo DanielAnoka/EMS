@@ -1,116 +1,50 @@
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import InputField from "../ui/InputField";
-import type { TenantInfo } from "../../types/tentant";
-import TenantForm from "./TentantFrom";
+import type { CreateProperty } from "../../types/property";
 
 interface AddPropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (payload: {
-    title: string;
-    price: number;
-    description: string;
-    property_type_id: number;
-    status: "available" | "sold" | "rented";
-    bedrooms: number;
-    bathrooms: number;
-    toilets: number;
-    isOwner: boolean;
-    tenant?: TenantInfo;
-  }) => void;
+  onAdd: (estate: CreateProperty) => void;
 }
-
-const initialTenant: TenantInfo = { name: "", email: "", phone_number: "", address: "", status: "active" };
-
 const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [form, setForm] = useState({
     title: "",
     price: "",
     description: "",
     status: "" as "" | "available" | "sold" | "rented",
-    property_type_id: "" as string | number,
     bedrooms: "",
     bathrooms: "",
     toilets: "",
-    isOwner: null as boolean | null,
+    owner_status: null as boolean | null,
+    hasTenant: null as boolean | null,
   });
-
   if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newErrors: Record<string, string> = {};
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+
+      setTimeout(() => {
+        setErrors({});
+      }, 1000);
+
+      return;
+    }
+  };
 
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
-  const handleTenantChange = (key: keyof TenantInfo, value: string) => {
-    setTenant((prev) => ({ ...prev, [key]: value }));
-  };
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!form.title.trim()) e.title = "Title is required";
-    if (!form.price || isNaN(Number(form.price)))
-      e.price = "Valid price is required";
-    if (!form.description.trim()) e.description = "Description is required";
-    if (
-      !form.property_type_id ||
-      isNaN(Number(form.property_type_id as number))
-    )
-      e.property_type_id = "Property type is required";
-    if (!form.status) e.status = "Status is required";
-    if (!form.bedrooms || isNaN(Number(form.bedrooms)))
-      e.bedrooms = "Valid bedrooms is required";
-    if (!form.bathrooms || isNaN(Number(form.bathrooms)))
-      e.bathrooms = "Valid bathrooms is required";
-    if (!form.toilets || isNaN(Number(form.toilets)))
-      e.toilets = "Valid toilets is required";
-    if (form.isOwner === null) e.isOwner = "Please select Yes or No";
-
- if (form.isOwner === false) {
-  if (!tenant.name.trim()) e.tenant_name = "Tenant name is required";
-  if (!tenant.email.trim()) e.tenant_email = "Tenant email is required";
-  if (!(tenant.phone_number ?? "").trim()) e.tenant_phone = "Tenant phone number is required";
-  if (!(tenant.address ?? "").trim()) e.tenant_address = "Tenant address is required";
-}
-
-
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) return;
-
-    const payload = {
-      title: form.title.trim(),
-      price: Number(form.price),
-      description: form.description.trim(),
-      property_type_id: Number(form.property_type_id),
-      status: form.status as "available" | "sold" | "rented",
-      bedrooms: Number(form.bedrooms),
-      bathrooms: Number(form.bathrooms),
-      toilets: Number(form.toilets),
-      isOwner: Boolean(form.isOwner),
-      ...(form.isOwner === false ? { tenant } : {}),
-    };
-
-    onAdd?.(payload);
-
-    setForm({
-      title: "",
-      price: "",
-      description: "",
-      status: "" as "" | "available" | "sold" | "rented",
-      property_type_id: "" as string | number,
-      bedrooms: "",
-      bathrooms: "",
-      toilets: "",
-      isOwner: null as boolean | null,
-    });
-
-    setTenant(initialTenant);
-    onClose();
+  const handleOwnerChange = (value: boolean | null) => {
+    setForm((prev) => ({ ...prev, owner_status: value }));
   };
 
   return (
@@ -129,9 +63,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
           </button>
         </div>
 
-        {/* Scrollable content */}
         <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
-          {/* Property form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               id="title"
@@ -200,19 +132,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
                 <p className="mt-1 text-xs text-red-600">{errors.status}</p>
               )}
             </div>
-            {/* <InputField
-              id="property_type_id"
-              label="Property Type ID"
-              type="number"
-              value={String(form.property_type_id || "")}
-              onChange={(v) => handleChange("property_type_id", v)}
-              placeholder="e.g. 1"
-              required
-              error={errors.property_type_id}
-            /> */}
           </div>
-
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -227,8 +147,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
               <p className="mt-1 text-xs text-red-600">{errors.description}</p>
             )}
           </div>
-
-          {/* Radio yes/no */}
+          {/* Ownership */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Does the estate own this property?
@@ -237,10 +156,10 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
-                  name="isOwner"
+                  name="owner_status"
                   value="yes"
-                  checked={form.isOwner === true}
-                  onChange={() => setForm((p) => ({ ...p, isOwner: true }))}
+                  checked={form.owner_status === true}
+                  onChange={() => handleOwnerChange(true)}
                   className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Yes</span>
@@ -248,29 +167,20 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
-                  name="isOwner"
+                  name="owner_status"
                   value="no"
-                  checked={form.isOwner === false}
-                  onChange={() => setForm((p) => ({ ...p, isOwner: false }))}
+                  checked={form.owner_status === false}
+                  onChange={() => handleOwnerChange(false)}
                   className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">No</span>
               </label>
             </div>
-            {errors.isOwner && (
-              <p className="mt-1 text-xs text-red-600">{errors.isOwner}</p>
+            {errors.owner_status && (
+              <p className="mt-1 text-xs text-red-600">{errors.owner_status}</p>
             )}
           </div>
-
-          {form.isOwner === false && (
-            <TenantForm
-              tenant={tenant}
-              onChange={handleTenantChange}
-              errors={errors}
-            />
-          )}
         </div>
-
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
           <button
             type="button"
@@ -282,7 +192,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyModalProps) => {
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
           >
             <Plus className="w-4 h-4" />
             Add Property
