@@ -1,16 +1,10 @@
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
-import type { Property } from "../types/property";
-
-// export const useGetProperties = () => {
-//   return useQuery<Property[]>({
-//     queryKey: ["properties"],
-//     queryFn: async () => {
-//       const response = await axiosInstance.get("estates/properties");
-//       return response.data as Property[];
-//     },
-//   });
-// };
+import type { CreateProperty, Property } from "../types/property";
 
 type Properties = Property[];
 type PropertiesQueryOpts = Partial<UseQueryOptions<Properties, Error>>;
@@ -29,3 +23,12 @@ export const useGetProperties = (opts?: PropertiesQueryOpts) =>
     retry: 1,
     ...opts,
   });
+
+export const useCreateProperty = () => {
+  return useMutation({
+    mutationFn: async (payload: CreateProperty) => {
+      const response = await axiosInstance.post("/estates/property", payload);
+      return response.data;
+    },
+  });
+};

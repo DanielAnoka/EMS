@@ -67,6 +67,7 @@ const PropertyManagement = () => {
       <AddProperty
         isOpen={isAddPropertyOpen}
         onClose={() => setIsAddPropertyOpen(false)}
+        onAdd={()=>('hello')}
       />
     </>
   );
