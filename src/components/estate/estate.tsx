@@ -14,6 +14,7 @@ import EstateLogin from "./EstateLogin";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import EstateDetails from "./EstateDetails";
+import { Skeleton } from "../ui/skeleton";
 
 const Estate: React.FC = () => {
   const queryClient = useQueryClient();
@@ -102,25 +103,35 @@ const Estate: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card
-            label="Total Estates"
-            value={estatesData?.length || 0}
-            icon={Building}
-          />
-          <Card
-            label="Active Estates"
-            icon={UserCheck}
-            iconBgColor="bg-green-100"
-            iconColor="text-green-600"
-            value={activeCount}
-          />
-          <Card
-            label="Inactive Estates"
-            icon={UserX}
-            iconBgColor="bg-red-100"
-            iconColor="text-red-600"
-            value={inactiveCount}
-          />
+          {isLoading ? (
+            <>
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+            </>
+          ) : (
+            <>
+              <Card
+                label="Total Estates"
+                value={estatesData?.length || 0}
+                icon={Building}
+              />
+              <Card
+                label="Active Estates"
+                icon={UserCheck}
+                iconBgColor="bg-green-100"
+                iconColor="text-green-600"
+                value={activeCount}
+              />
+              <Card
+                label="Inactive Estates"
+                icon={UserX}
+                iconBgColor="bg-red-100"
+                iconColor="text-red-600"
+                value={inactiveCount}
+              />
+            </>
+          )}
         </div>
 
         <SearchBar
@@ -177,7 +188,7 @@ const Estate: React.FC = () => {
         <EstateDetails
           isOpen={!!selectedEstateId}
           onClose={() => setSelectedEstateId(null)}
-          estateId={selectedEstateId} 
+          estateId={selectedEstateId}
         />
       )}
     </>

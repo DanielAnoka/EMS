@@ -5,15 +5,13 @@ import Card from "../ui/card";
 import { useGetProperties } from "../../services/property";
 import SearchBar from "../ui/search";
 import { useState } from "react";
-import AddProperty from "./AddProperty";
+import { Skeleton } from "../ui/skeleton";
+
 
 const PropertyManagement = () => {
   const { user } = useAuth();
   const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
-  const { data: propertiesData = [] } = useGetProperties();
-  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
-
- 
+  const { data: propertiesData, isLoading } = useGetProperties();
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -21,11 +19,11 @@ const PropertyManagement = () => {
   const isEstateAdmin = userRole === "estate_admin";
 
   // Filter based on role
-  const visibleProperties = isSuperOrAdmin
-    ? propertiesData
-    : isEstateAdmin
-    ? propertiesData.filter((p) => p.estate_id === user?.id)
-    : [];
+  // const visibleProperties = isSuperOrAdmin
+  //   ? propertiesData
+  //   : isEstateAdmin
+  //   ? propertiesData.filter((p) => p.estate_id === user?.id)
+  //   : [];
 
   return (
     <>
@@ -42,7 +40,7 @@ const PropertyManagement = () => {
             </p>
           </div>
           {isEstateAdmin && (
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"   onClick={() => setIsAddPropertyOpen(true)}>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center">
               <Plus className="w-4 h-4 mr-2" />
               Add Property
             </button>
@@ -51,11 +49,19 @@ const PropertyManagement = () => {
 
         {/* cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card
-            label="Total Properties"
-            value={visibleProperties.length}
-            icon={Building}
-          />
+          {isLoading ? (
+            <>
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+            </>
+          ) : (
+            <Card
+              label="Total Properties"
+              value={propertiesData?.length || 0}
+              icon={Building}
+            />
+          )}
         </div>
 
         <SearchBar
@@ -64,11 +70,7 @@ const PropertyManagement = () => {
           onChange={setSearchTerm}
         />
       </div>
-      <AddProperty
-        isOpen={isAddPropertyOpen}
-        onClose={() => setIsAddPropertyOpen(false)}
-        onAdd={()=>('hello')}
-      />
+    
     </>
   );
 };

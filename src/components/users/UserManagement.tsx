@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import EditUserModal from "./UserEditModal";
 import { useEditUser } from "../../services/users-service";
+import { Skeleton } from "../ui/skeleton";
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
@@ -133,11 +134,19 @@ const UserManagement = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card
-            label="Total Users"
-            value={filteredUsers.length || 0}
-            icon={Users}
-          />
+          {isLoading ? (
+            <>
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+              <Skeleton className="h-16 w-full bg-slate-600" />
+            </>
+          ) : (
+            <Card
+              label="Total Users"
+              value={filteredUsers.length || 0}
+              icon={Users}
+            />
+          )}
         </div>
 
         {/* Filters */}
