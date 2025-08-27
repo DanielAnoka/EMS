@@ -6,13 +6,14 @@ import { useGetProperties } from "../../services/property";
 import SearchBar from "../ui/search";
 import { useState } from "react";
 import { Skeleton } from "../ui/skeleton";
+import AddProperty from "./AddProperty";
 
 
 const PropertyManagement = () => {
   const { user } = useAuth();
   const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
   const { data: propertiesData, isLoading } = useGetProperties();
-
+   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
@@ -40,7 +41,7 @@ const PropertyManagement = () => {
             </p>
           </div>
           {isEstateAdmin && (
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center">
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"  onClick={() => setIsAddModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Property
             </button>
@@ -70,7 +71,11 @@ const PropertyManagement = () => {
           onChange={setSearchTerm}
         />
       </div>
-    
+      <AddProperty
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+       onAdd={() => {}}
+      />
     </>
   );
 };
