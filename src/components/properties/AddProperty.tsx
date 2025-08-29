@@ -23,6 +23,7 @@ const initialTenant: TenantInfo = { name: "", email: "", status: "active" };
 
 const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   const { user } = useAuth();
+  
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
   const [form, setForm] = useState({
@@ -34,7 +35,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     bathrooms: "",
     toilets: "",
     property_type_id: 3,
-    estate_id: "",
+    estate_id:  user?.user_estate?.id ,
     owner_status: null as boolean | null,
     landlord_name: "",
     landlord_email: "",
@@ -158,7 +159,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
               id="status"
               label="Status"
               value={form.status}
-              onChange={(v) => handleChange("status", v)}
+              onChange={(v) => handleChange("status", v as "available" | "sold" | "rented")}
               placeholder="Select status"
               options={[
                 { label: "Available", value: "available" },

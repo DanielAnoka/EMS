@@ -39,6 +39,22 @@ export type User = {
   phone_number: number;
   created_at?: string;
   updated_at?: string;
+   role: string[];   
+  user_estate?: {
+    id: number;
+    lga_id: number;
+    name: string;
+    description: string | null;
+    owner: string;
+    address: string;
+    email: string;
+    phone_number: string;
+    status: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    created_by: number;
+  };
 };
 
 export type LoginPayload = {
