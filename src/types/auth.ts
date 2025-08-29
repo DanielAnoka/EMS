@@ -40,7 +40,7 @@ export type User = {
   created_at?: string;
   updated_at?: string;
    role: string[];   
-  user_estate?: {
+  user_estate: {
     id: number;
     lga_id: number;
     name: string;

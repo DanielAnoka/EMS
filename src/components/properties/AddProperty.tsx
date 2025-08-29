@@ -4,7 +4,6 @@
 import { Plus, X } from "lucide-react";
 import type {
   CreateProperty,
-  CreatePropertyPayload,
   LandlordInfo,
   TenantInfo,
 } from "../../types/property";
@@ -13,12 +12,12 @@ import InputField from "../ui/InputField";
 import { useAuth } from "../../hooks/useAuth";
 import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
-import TenantForm from "./tenantform";
+import TenantForm from "./tenantForm";
 
 interface AddPropertyProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (propertyData: CreateProperty) => Promise<void>;
+  onAdd: (propertyData: CreateProperty) => void;
 }
 
 const initialLandlord: LandlordInfo = { name: "", email: "" };
@@ -26,6 +25,7 @@ const initialTenant: TenantInfo = { name: "", email: "", status: "active" };
 
 const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   const { user } = useAuth();
+  console.log("user", user);
 
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
@@ -38,7 +38,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     bathrooms: "",
     toilets: "",
     property_type_id: 3,
-    estate_id:  "",
+    estate_id: 0,
     owner_status: null as boolean | null,
     landlord_name: "",
     landlord_email: "",
@@ -48,13 +48,12 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   });
 
   useEffect(() => {
-  if (user?.user_estate?.id) {
-    setForm(prev => ({ ...prev, estate_id: user.user_estate.id }));
-  }
-}, [user]);
+    if (user?.user_estate?.id) {
+      setForm((prev) => ({ ...prev, estate_id: user.user_estate.id }));
+    }
+  }, [user]);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
 
   useEffect(() => {
     if (isOpen) {
@@ -66,7 +65,6 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     }
   }, [isOpen]);
 
- 
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -165,11 +163,11 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
           newErrors.tenant_email = "Tenant email is required";
       }
     }
-     const toNum = (v: string | number) =>
-    typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+    const toNum = (v: string | number) =>
+      typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
     const payload: CreateProperty = {
       title: form.title.trim(),
-       price: toNum(form.price), 
+      price: toNum(form.price),
       description: form.description?.trim() || "",
       status: form.status as "available" | "sold" | "rented",
       bedrooms: toNum(form.bedrooms),
@@ -197,6 +195,8 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
             tenant_status: false,
           }),
     };
+
+    console.log("property_payload", payload);
 
     await onAdd(payload);
   };

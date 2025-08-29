@@ -6,10 +6,12 @@ import {
 } from "react-router-dom";
 import { createRoutes, routes } from "./_routes";
 import { AuthProvider } from "./context/AuthProvider";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster />
       <Router>
         <Routes>
           {createRoutes(routes)}

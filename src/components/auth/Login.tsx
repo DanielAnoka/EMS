@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Login: React.FC = () => {
     try {
       setIsLoading(true);
       await login({ email: email.trim(), password });
+      toast.success("Login successful");
       navigate("/dashboard");
     } catch (err: unknown) {
       if (err instanceof AxiosError) {

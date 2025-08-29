@@ -8,26 +8,51 @@ import { useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import AddProperty from "./AddProperty";
 import { useCreateProperty } from "../../services/property";
-
+import type {
+  CreateProperty,
+  CreatePropertyPayload,
+} from "../../types/property";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import LoginDetails from "./loginDetails";
 
 const PropertyManagement = () => {
   const { user } = useAuth();
   const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
   const { data: propertiesData, isLoading } = useGetProperties();
-   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { mutate: createProperty } = useCreateProperty();
-  
+  const queryClient = useQueryClient();
+  // console.log("properties", propertiesData);
 
   const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
   const isEstateAdmin = userRole === "estate_admin";
+  // const userEstateId = user?.user_estate?.id;
 
-  // Filter based on role
+  // Filter based on estate id
   // const visibleProperties = isSuperOrAdmin
-  //   ? propertiesData
+  //   ? propertiesData ?? []
   //   : isEstateAdmin
-  //   ? propertiesData.filter((p) => p.estate_id === user?.id)
+  //   ? (propertiesData ?? []).filter((p) => p.estate_id === userEstateId)
   //   : [];
+
+  const [createdProperty, setCreatedProperty] =
+    useState<CreatePropertyPayload | null>(null);
+
+  const handleSubmit = (property: CreateProperty) => {
+    createProperty(property, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ["properties"] });
+        toast.success(`${property.title} created successfully!`);
+        setCreatedProperty(data);
+      },
+      onError: (err) => {
+        console.log(err.message);
+        toast.error(`Failed to create estate`);
+      },
+    });
+  };
 
   return (
     <>
@@ -44,7 +69,10 @@ const PropertyManagement = () => {
             </p>
           </div>
           {isEstateAdmin && (
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"  onClick={() => setIsAddModalOpen(true)}>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
+              onClick={() => setIsAddModalOpen(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Property
             </button>
@@ -77,8 +105,16 @@ const PropertyManagement = () => {
       <AddProperty
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-       onAdd={() => {}}
+        onAdd={handleSubmit}
       />
+
+      {createdProperty && (
+        <LoginDetails
+          isOpen={!!createProperty}
+          onClose={() => setCreatedProperty(null)}
+          property={createdProperty}
+        />
+      )}
     </>
   );
 };
