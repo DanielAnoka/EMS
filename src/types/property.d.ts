@@ -26,3 +26,36 @@ export type TenantInfo = {
   email: string;
   status: "active" | "inactive";
 };
+
+export type CreatePropertyPayload = {
+  status: string;
+  message: string;
+  landlord: {
+    id: number;
+    name: string;
+    email: string;
+    password: string;
+  };
+  tenant: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  property: {
+    title: string;
+    price: number;
+    description?: string;
+    status: "available" | "rented" | "sold";
+    property_type_id: number;
+    bedrooms: number;
+    bathrooms: number;
+    toilets: number;
+    estate_id: number;
+    owner_status?: boolean;
+    landlord_name?: string;
+    landlord_email?: string;
+    tenant_status?: boolean;
+    tenant_name?: string;
+    tenant_email?: string;
+  };
+};

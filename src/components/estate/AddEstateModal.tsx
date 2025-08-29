@@ -22,6 +22,7 @@ const AddEstateModal: React.FC<AddEstateModalProps> = ({
     email: "",
     status: null as 1 | null,
   });
+  
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 

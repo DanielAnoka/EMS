@@ -7,6 +7,7 @@ import SearchBar from "../ui/search";
 import { useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import AddProperty from "./AddProperty";
+import { useCreateProperty } from "../../services/property";
 
 
 const PropertyManagement = () => {
@@ -15,6 +16,8 @@ const PropertyManagement = () => {
   const { data: propertiesData, isLoading } = useGetProperties();
    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const { mutate: createProperty } = useCreateProperty();
+  
 
   const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
   const isEstateAdmin = userRole === "estate_admin";
