@@ -22,10 +22,10 @@ export const useGetUsers = (opts?: UsersQueryOpts) =>
       const { data } = await axiosInstance.get<Users>("/users");
       return data;
     },
-    staleTime: 60_000,    // 1 min: avoid spam refetches
-    gcTime: 5 * 60_000,   // keep cached list for 5 min
-    retry: 1,             // be gentle on the API
-    ...opts,              // allow enabled, select, etc.
+    staleTime: 60_000,    
+    gcTime: 5 * 60_000,  
+    retry: 1,         
+    ...opts,              
   });
 
 export const useEditUser = (userId: string) => {
@@ -36,3 +36,5 @@ export const useEditUser = (userId: string) => {
     },
   });
 };
+
+

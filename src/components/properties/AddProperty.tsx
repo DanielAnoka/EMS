@@ -12,7 +12,7 @@ import InputField from "../ui/InputField";
 import { useAuth } from "../../hooks/useAuth";
 import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
-import TenantForm from "./tenantForm";
+import TenantForm from "./tenantform";
 
 interface AddPropertyProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ const initialTenant: TenantInfo = { name: "", email: "", status: "active" };
 
 const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   const { user } = useAuth();
-  console.log("user", user);
+  // console.log("user", user);
 
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
@@ -120,12 +120,6 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     setTenant((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleBackdropClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if ((e.target as HTMLElement).dataset.backdrop === "true") {
-      onClose();
-    }
-  };
-
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
     if (!form.title.trim()) newErrors.title = "Title is required";
@@ -196,35 +190,32 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
           }),
     };
 
-    console.log("property_payload", payload);
+    //  console.log("property_payload", payload);
 
-    await onAdd(payload);
+    onAdd(payload);
   };
 
   return (
     <div
-      className={`fixed inset-0 z-50 ${
-        isOpen ? "pointer-events-auto" : "pointer-events-none"
+      className={`fixed inset-0 z-50 transition-all duration-300 ease-in-out ${
+        isOpen ? "visible" : "invisible"
       }`}
       aria-hidden={!isOpen}
-      role="dialog"
-      aria-modal="true"
     >
       <div
-        data-backdrop="true"
-        onClick={handleBackdropClick}
-        className={`absolute inset-0 bg-black/50 transition-opacity ${
-          isOpen ? "opacity-100" : "opacity-0"
+        className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+          isOpen ? "opacity-50" : "opacity-0"
         }`}
+        onClick={onClose}
       />
 
       <div
-        className={[
-          "absolute inset-y-0 right-0 w-full sm:max-w-md md:max-w-2xl",
-          "bg-white shadow-xl flex flex-col",
-          "transition-transform duration-300 ease-out",
-          isOpen ? "translate-x-0" : "translate-x-full",
-        ].join(" ")}
+        className={`
+          absolute inset-y-0 right-0 w-full sm:max-w-md md:max-w-2xl
+          bg-white shadow-xl flex flex-col
+          transition-transform duration-300 ease-out
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
+        `}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">

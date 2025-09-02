@@ -6,8 +6,10 @@ interface UserTableProps {
   users: User[];
   onEdit?: (user: User) => void;
   onView?: (user: User) => void;
+   onDelete?: (estate: User) => void;
   canEdit?: boolean;
   canView?: boolean;
+  
 }
 
 const roleColors: Record<number, string> = {
@@ -56,7 +58,10 @@ export const UserTable: React.FC<UserTableProps> = ({
                       roleColors[user.role_id] || "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {ROLE_NAME_BY_ID[user.role_id].replace("_", " ")}
+                    {(ROLE_NAME_BY_ID[user.role_id] || "unknown").replace(
+                      "_",
+                      " "
+                    )}
                   </span>
                 </td>
 

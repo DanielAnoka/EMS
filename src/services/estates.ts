@@ -18,15 +18,6 @@ export const useGetEstates = (opts?: EstatesQueryOpts) =>
     ...opts,
   });
 
-// export const useGetEstates = () => {
-//   return useQuery({
-//     queryKey: ["estates"],
-//     queryFn: async () => {
-//       const response = await axiosInstance.get("/estates");
-//       return response.data;
-//     },
-//   });
-// };
 
 export const useCreateEstate = () => {
   return useMutation({
@@ -46,3 +37,12 @@ export const useGetEstateById = (estateId: string) => {
     },
   });
 }
+
+export const useDeleteEstate = () => {
+  return useMutation({
+    mutationFn: async (estateId: number | string) => {
+      const response = await axiosInstance.delete(`/estate/delete/${estateId}`);
+      return response.data;
+    },
+  });
+};

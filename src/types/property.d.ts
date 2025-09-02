@@ -60,3 +60,22 @@ export type CreatePropertyPayload = {
     tenant_email?: string;
   };
 };
+
+export interface Property {
+  id: number;
+  title: string;
+  description: string;
+  price: string; // keeping as string since backend returns "2500000.00"
+  status: "available" | "rented" | "sold"; 
+  bedrooms: number;
+  bathrooms: number;
+  toilets: number;
+  estate_id: number;
+  property_type_id: number;
+  owner_id: number;
+  user_id: number;
+  features: string | null;
+  location: string | null;
+  created_at: string;
+  updated_at: string;
+}

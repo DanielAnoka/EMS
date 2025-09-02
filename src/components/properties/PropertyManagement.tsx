@@ -12,9 +12,11 @@ import type {
   CreateProperty,
   CreatePropertyPayload,
 } from "../../types/property";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import LoginDetails from "./loginDetails";
+import { Toast } from "../ui/Toast";
+import PropertyTable from "./table";
+import { TableSkeleton } from "../ui/TableSkeleton";
 
 const PropertyManagement = () => {
   const { user } = useAuth();
@@ -24,18 +26,27 @@ const PropertyManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { mutate: createProperty } = useCreateProperty();
   const queryClient = useQueryClient();
-  // console.log("properties", propertiesData);
+ 
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+    isVisible: boolean;
+  }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
 
   const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
   const isEstateAdmin = userRole === "estate_admin";
-  // const userEstateId = user?.user_estate?.id;
+  const userEstateId = user?.user_estate?.id;
 
   // Filter based on estate id
-  // const visibleProperties = isSuperOrAdmin
-  //   ? propertiesData ?? []
-  //   : isEstateAdmin
-  //   ? (propertiesData ?? []).filter((p) => p.estate_id === userEstateId)
-  //   : [];
+  const visibleProperties = isSuperOrAdmin
+    ? propertiesData ?? []
+    : isEstateAdmin
+    ? (propertiesData ?? []).filter((p) => p.estate_id === userEstateId)
+    : [];
 
   const [createdProperty, setCreatedProperty] =
     useState<CreatePropertyPayload | null>(null);
@@ -44,14 +55,26 @@ const PropertyManagement = () => {
     createProperty(property, {
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: ["properties"] });
-        toast.success(`${property.title} created successfully!`);
+
         setCreatedProperty(data);
+        setToast({
+          message: `${property.title} created successfully!`,
+          type: "success",
+          isVisible: true,
+        });
       },
       onError: (err) => {
         console.log(err.message);
-        toast.error(`Failed to create estate`);
+        setToast({
+          message: `Failed to create estate`,
+          type: "error",
+          isVisible: true,
+        });
       },
     });
+  };
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
   return (
@@ -90,7 +113,7 @@ const PropertyManagement = () => {
           ) : (
             <Card
               label="Total Properties"
-              value={propertiesData?.length || 0}
+              value={visibleProperties.length}
               icon={Building}
             />
           )}
@@ -102,6 +125,38 @@ const PropertyManagement = () => {
           onChange={setSearchTerm}
         />
       </div>
+
+      {/* <PropertyTable
+        property={visibleProperties}
+        onEdit={handleEdit}
+        onView={handleView}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+        canEdit={isSuperOrAdmin || isEstateAdmin}
+        canView={isSuperOrAdmin || isEstateAdmin}
+        canDelete={isSuperOrAdmin || isEstateAdmin}
+      /> */}
+
+      {!isLoading && visibleProperties.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 text-6xl mb-4">🏠</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Property found
+          </h3>
+          <p className="text-gray-600">
+            Try adjusting your search or filter criteria
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6">
+          {isLoading ? (
+            <TableSkeleton rows={8} showActions  />
+          ) : (
+            <PropertyTable property={visibleProperties} />
+          )}
+        </div>
+      )}
+
       <AddProperty
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -115,6 +170,12 @@ const PropertyManagement = () => {
           property={createdProperty}
         />
       )}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={handleCloseToast}
+      />
     </>
   );
 };

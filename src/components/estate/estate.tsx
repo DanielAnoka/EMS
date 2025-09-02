@@ -2,7 +2,7 @@ import { Building, Plus, UserCheck, UserX } from "lucide-react";
 import React, { useState } from "react";
 import Card from "../ui/card";
 import SearchBar from "../ui/search";
-import { useGetEstates } from "../../services/estates";
+import { useDeleteEstate, useGetEstates } from "../../services/estates";
 import AddEstateModal from "./AddEstateModal";
 import { useCreateEstate } from "../../services/estates";
 import { Toast } from "../ui/Toast";
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import EstateDetails from "./EstateDetails";
 import { Skeleton } from "../ui/skeleton";
+import DeleteConfirmModal from "../ui/deleteModal";
 
 const Estate: React.FC = () => {
   const queryClient = useQueryClient();
@@ -24,6 +25,38 @@ const Estate: React.FC = () => {
   const { mutate: createEstate } = useCreateEstate();
   const { user } = useAuth();
   const [selectedEstateId, setSelectedEstateId] = useState<string | null>(null);
+  const { mutate: deleteEstate, isPending: isDeleting } = useDeleteEstate();
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [estateToDelete, setEstateToDelete] = useState<Estates | null>(null);
+
+  const handleAskDelete = (estate: Estates) => {
+    setEstateToDelete(estate);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!estateToDelete) return;
+    deleteEstate(estateToDelete.id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["estates"] });
+        setToast({
+          message: "Estate deleted",
+          type: "success",
+          isVisible: true,
+        });
+        setIsDeleteOpen(false);
+        setEstateToDelete(null);
+      },
+      onError: () => {
+        setToast({
+          message: "Failed to delete estate",
+          type: "error",
+          isVisible: true,
+        });
+      },
+    });
+  };
 
   const [toast, setToast] = useState<{
     message: string;
@@ -47,6 +80,7 @@ const Estate: React.FC = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
+ 
   const handleSubmit = (estate: CreateEstate) => {
     createEstate(estate, {
       onSuccess: (data) => {
@@ -158,9 +192,10 @@ const Estate: React.FC = () => {
           <TableSkeleton rows={8} showActions />
         ) : (
           <EstateTable
-            estates={estatesData || []}
+            estates={filteredEstates}
             canDelete={user?.role_id === 1}
             onView={(estate) => setSelectedEstateId(String(estate.id))}
+            onDelete={handleAskDelete}
           />
         )}
       </div>
@@ -191,6 +226,20 @@ const Estate: React.FC = () => {
           estateId={selectedEstateId}
         />
       )}
+      <DeleteConfirmModal
+        isOpen={isDeleteOpen}
+        title="Delete Estate"
+        message={
+          estateToDelete
+            ? `Are you sure you want to delete "${estateToDelete.name} Estate"? This action cannot be undone.`
+            : "Are you sure you want to delete this estate?"
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={isDeleting}
+        onConfirm={confirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+      />
     </>
   );
 };
