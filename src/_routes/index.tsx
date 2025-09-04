@@ -24,42 +24,32 @@ export const routes: AppRoute[] = [
     path: "/dashboard",
     element: MainLayout,
     protected: true,
-    children: [
-      { index: true, element: Dashboard, protected: true }, 
-    ],
+    children: [{ index: true, element: Dashboard, protected: true }],
   },
   {
     path: "/estates",
     element: MainLayout,
     protected: true,
-    children: [
-      { index: true, element: EstateManagement, protected: true }, 
-    ],
+    children: [{ index: true, element: EstateManagement, protected: true }],
   },
-    {
-      path: "/users",
-      element: MainLayout,
-      protected: true,
-      children: [
-        { index: true, element: UserManagement, protected: true }, 
-      ],
-    },
-    {
-      path: "/properties",
-      element: MainLayout,
-      protected: true,
-      children: [
-        { index: true, element: PropertyManagement, protected: true }, 
-      ],
-    },
-    {
-      path: "/charges",
-      element: MainLayout,
-      protected: true,
-      children: [
-        { index: true, element: Charges, protected: true }, 
-      ],
-    },
+  {
+    path: "/users",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: UserManagement, protected: true }],
+  },
+  {
+    path: "/properties",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: PropertyManagement, protected: true }],
+  },
+  {
+    path: "/charges",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: Charges, protected: true }],
+  },
 
   // more route objects
 ];
