@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { X, Save } from "lucide-react";
-import type { RoleId, User, UserRole } from "../../types/auth";
-import { ROLE_ID_BY_NAME, ROLE_LABELS, ROLE_NAME_BY_ID } from "../../types/auth";
+import type { User, Role } from "../../types/auth";
+
+
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
 
@@ -10,8 +11,16 @@ interface EditUserModalProps {
   onClose: () => void;
   onEdit: (user: User) => void;
   user: User | null;
-  allowedRoles: UserRole[];
+  allowedRoles: Role[];
 }
+
+const roleLabels: Record<Role, string> = {
+  admin: "Admin",
+  tenant: "Tenant",
+  landlord: "Landlord",
+  "estate admin": "Estate Admin",
+  "super admin": "Super Admin",
+};
 
 const EditUserModal: React.FC<EditUserModalProps> = ({
   isOpen,
@@ -24,10 +33,10 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     name: "",
     email: "",
     password: "",
-    role: "" as UserRole | "",
+    role: "" as Role | "",
   });
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) {
@@ -35,15 +44,13 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         name: user.name || "",
         email: user.email || "",
         password: "",
-        role:
-          (ROLE_NAME_BY_ID[user.role_id] as UserRole) || ("" as UserRole | ""),
+        // pick the first role if multiple exist
+        role: (user.role[0] as Role) || "",
       });
     }
   }, [user]);
 
   if (!isOpen || !user) return null;
-
-
 
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -61,23 +68,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-
-      setTimeout(() => {
-        setErrors({});
-      }, 2000);
-
+      setTimeout(() => setErrors({}), 2000);
       return;
     }
 
-   const roleId = form.role ? ROLE_ID_BY_NAME[form.role] as RoleId : undefined;
-    if (!roleId) return;
-
-
+    // update user with new role as array
     onEdit({
       ...user,
       name: form.name,
       email: form.email,
-      role_id: roleId!,
+      role: [form.role as Role],
     });
 
     onClose();
@@ -126,7 +126,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             value={form.role}
             onChange={(value) => handleChange("role", value)}
             allowedRoles={allowedRoles}
-            roleLabels={ROLE_LABELS}
+            roleLabels={roleLabels}
             required
             error={errors.role}
           />

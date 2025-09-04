@@ -1,16 +1,15 @@
 import { CreditCard, Plus } from "lucide-react";
-import { useGetCharges } from "../../services/charges";
+import { useGetCharges, useCreateCharge } from "../../services/charges";
 import Card from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import SearchBar from "../ui/search";
 import { useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { ROLE_NAME_BY_ID } from "../../types/auth";
+import {type Role } from "../../types/auth"; // ✅ import Role type
 import ChargesTable from "./table";
-import type { Charge } from "../../types/charges";
+import type { Charge, CreateChargePayload } from "../../types/charges";
 import { TableSkeleton } from "../ui/TableSkeleton";
 import AddCharges from "./AddCharges";
-import { useCreateCharge } from "../../services/charges";
 import { norm, statusText } from "../../utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Toast } from "../ui/Toast";
@@ -19,14 +18,10 @@ const Charges = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { mutate: createCharges } = useCreateCharge();
-  const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
   const { data: charges = [], isLoading } = useGetCharges();
-  // console.log("charges", charges);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
-  const isEstateAdmin = userRole === "estate_admin";
-  const userEstateId = user?.user_estate?.id;
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -37,17 +32,21 @@ const Charges = () => {
     isVisible: false,
   });
 
-  // Role-based visibility
+  const userRole: Role | null = user?.role?.[0] ?? null; // ✅ role is array in your type
+  const userEstateId = user?.user_estate?.id;
+
+  // ✅ Role-based visibility
   const visibleCharges: Charge[] = useMemo(() => {
-    if (isSuperOrAdmin) return charges;
-    if (isEstateAdmin)
+    if (!userRole) return [];
+    if (userRole === "super admin" || userRole === "admin") return charges;
+    if (userRole === "estate admin")
       return charges.filter(
         (c: { estate_id: number | undefined }) => c.estate_id === userEstateId
       );
     return [];
-  }, [isSuperOrAdmin, isEstateAdmin, charges, userEstateId]);
+  }, [userRole, charges, userEstateId]);
 
-  // Search-aware filter
+  // ✅ Search-aware filter
   const filteredCharges: Charge[] = useMemo(() => {
     const term = norm(searchTerm);
     if (!term) return visibleCharges;
@@ -68,13 +67,13 @@ const Charges = () => {
     });
   }, [visibleCharges, searchTerm]);
 
-  const handleSubmit = (charge: Charge) => {
-    createCharges(charge, {
+  // ✅ Handle add charges
+  const handleSubmit = (chargesData: CreateChargePayload) => {
+    createCharges(chargesData, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["charges"] });
-
         setToast({
-          message: `${charge.name} created successfully!`,
+          message: `${chargesData.name} created successfully!`,
           type: "success",
           isVisible: true,
         });
@@ -88,7 +87,8 @@ const Charges = () => {
       },
     });
   };
-    const handleCloseToast = () => {
+
+  const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
@@ -105,13 +105,19 @@ const Charges = () => {
               Create and manage service charges for residents
             </p>
           </div>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Charges
-          </button>
+
+          {/* ✅ Only Admins / Super Admin / Estate Admin can add charges */}
+          {(userRole === "super admin" ||
+            userRole === "admin" ||
+            userRole === "estate admin") && (
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Charges
+            </button>
+          )}
         </div>
 
         {/* cards */}
@@ -152,7 +158,6 @@ const Charges = () => {
         ) : (
           <div className="mt-6">
             {isLoading ? (
-              // <Skeleton className="h-40 w-full bg-slate-600" />
               <TableSkeleton rows={8} showActions />
             ) : (
               <ChargesTable charges={filteredCharges} />
@@ -160,11 +165,15 @@ const Charges = () => {
           </div>
         )}
       </div>
+
+      {/* Add Charges modal */}
       <AddCharges
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleSubmit}
       />
+
+      {/* Toast */}
       <Toast
         message={toast.message}
         type={toast.type}

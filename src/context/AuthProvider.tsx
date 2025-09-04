@@ -4,12 +4,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authService } from "../services/auth-service";
 import { qk } from "../utils/queryKeys";
 import { storage } from "../utils/storage";
-import type { LoginPayload, User } from "../types/auth";
+import type { LoginResponse, User } from "../types/auth";
 
 type AuthContextValue = {
   user: User | null;
   isLoadingUser: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginResponse) => Promise<void>;
   logout: () => Promise<void>;
   token: string | null;
 };

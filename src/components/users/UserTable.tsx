@@ -1,23 +1,23 @@
 import React from "react";
-import { ROLE_NAME_BY_ID, type User } from "../../types/auth";
+import { type User, type Role } from "../../types/auth";
 import { Mail, Edit, Eye } from "lucide-react";
 
 interface UserTableProps {
   users: User[];
   onEdit?: (user: User) => void;
   onView?: (user: User) => void;
-   onDelete?: (estate: User) => void;
+  onDelete?: (user: User) => void;
   canEdit?: boolean;
   canView?: boolean;
-  
 }
 
-const roleColors: Record<number, string> = {
-  1: "bg-purple-100 text-purple-800",
-  2: "bg-blue-100 text-blue-800",
-  3: "bg-green-100 text-green-800",
-  4: "bg-yellow-100 text-yellow-800",
-  5: "bg-red-100 text-red-800",
+// Role-based badge colors
+const roleColors: Record<Role, string> = {
+  admin: "bg-purple-100 text-purple-800",
+  tenant: "bg-blue-100 text-blue-800",
+  landlord: "bg-green-100 text-green-800",
+  "estate admin": "bg-yellow-100 text-yellow-800",
+  "super admin": "bg-red-100 text-red-800",
 };
 
 export const UserTable: React.FC<UserTableProps> = ({
@@ -42,6 +42,8 @@ export const UserTable: React.FC<UserTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {users.map((user, index) => {
+            const userRoles = user.role ?? [];
+
             return (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 font-medium text-gray-900">
@@ -53,16 +55,22 @@ export const UserTable: React.FC<UserTableProps> = ({
                 </td>
 
                 <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      roleColors[user.role_id] || "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {(ROLE_NAME_BY_ID[user.role_id] || "unknown").replace(
-                      "_",
-                      " "
+                  <div className="flex flex-wrap gap-2">
+                    {userRoles.length > 0 ? (
+                      userRoles.map((r) => (
+                        <span
+                          key={r}
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            roleColors[r] || "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {r.charAt(0).toUpperCase() + r.slice(1)}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-xs">No Role</span>
                     )}
-                  </span>
+                  </div>
                 </td>
 
                 <td className="px-6 py-4 flex items-center space-x-2 text-gray-600">

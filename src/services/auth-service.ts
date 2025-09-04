@@ -1,6 +1,6 @@
 import axiosInstance from "../utils/axiosInstance";
 import { storage } from "../utils/storage";
-import type { LoginPayload, LoginResponse, User } from "../types/auth";
+import type { LoginPayload, User } from "../types/auth";
 import { useMutation } from "@tanstack/react-query";
 import { type RegisterPayload } from "../types/auth";
 
@@ -26,7 +26,7 @@ axiosInstance.interceptors.response.use(
 );
 
 export const authService = {
-  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+  login: async (payload: LoginPayload) => {
     const response = await axiosInstance.post("/login", payload);
     const { token, user } = response.data;
     storage.setToken(token);

@@ -12,14 +12,14 @@ import {
   Bell,
   AlertTriangle,
 } from "lucide-react";
-import { ROLE_NAME_BY_ID, type UserRole } from "../../types/auth";
 import { useAuth } from "../../hooks/useAuth";
+import { type Role } from "../../types/auth"; 
 
 interface MenuItem {
   id: string;
   name: string;
   icon: React.ComponentType<SVGProps<SVGSVGElement>>;
-  roles: UserRole[];
+  roles: Role[]; // ✅ enforce union type here
 }
 
 const menuItems: MenuItem[] = [
@@ -27,31 +27,31 @@ const menuItems: MenuItem[] = [
     id: "dashboard",
     name: "Dashboard",
     icon: Home,
-    roles: ["super_admin", "estate_admin", "tenant", "admin"],
+    roles: ["super admin", "estate admin", "tenant", "admin"],
   },
   {
     id: "users",
     name: "User Management",
     icon: Users,
-    roles: ["super_admin", "admin",],
+    roles: ["super admin", "admin"],
   },
   {
     id: "estates",
     name: "Estate Management",
     icon: Building,
-    roles: ["super_admin", "admin"],
+    roles: ["super admin", "admin"],
   },
   {
     id: "properties",
     name: "Properties",
     icon: Building,
-    roles: ["super_admin", "estate_admin", "admin"],
+    roles: ["super admin", "estate admin", "admin"],
   },
   {
     id: "charges",
     name: "Charges",
     icon: CreditCard,
-    roles: ["super_admin", "estate_admin", "admin"],
+    roles: ["super admin", "estate admin", "admin"],
   },
   {
     id: "payments",
@@ -63,31 +63,31 @@ const menuItems: MenuItem[] = [
     id: "defaulters",
     name: "Defaulters",
     icon: AlertTriangle,
-    roles: ["super_admin", "estate_admin", "admin"],
+    roles: ["super admin", "estate admin", "admin"],
   },
   {
     id: "reports",
     name: "Reports",
     icon: BarChart3,
-    roles: ["super_admin", "estate_admin","admin"],
+    roles: ["super admin", "estate admin", "admin"],
   },
   {
     id: "notifications",
     name: "Notifications",
     icon: Bell,
-    roles: ["super_admin", "estate_admin", "tenant", "admin"],
+    roles: ["super admin", "estate admin", "tenant", "admin"],
   },
   {
     id: "roles",
     name: "Roles & Permissions",
     icon: Shield,
-    roles: ["super_admin"],
+    roles: ["super admin"],
   },
   {
     id: "settings",
     name: "Settings",
     icon: Settings,
-    roles: ["super_admin", "estate_admin",],
+    roles: ["super admin", "estate admin"],
   },
 ];
 
@@ -104,17 +104,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const { user } = useAuth();
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => user && item.roles.includes(ROLE_NAME_BY_ID[user.role_id])
-  );
+  // ✅ user.role is Role[]
+  const userRoles: Role[] = user?.role ?? [];
 
-  // console.log(filteredMenuItems);
+ 
+  const filteredMenuItems = menuItems.filter((item) =>
+    userRoles.some((role) => item.roles.includes(role))
+  );
 
   const handleItemClick = (itemId: string) => {
     if (itemId === "dashboard") {
       navigate("/dashboard");
     } else {
-      navigate(`${itemId}`);
+      navigate(`/${itemId}`);
     }
     onMobileMenuClose();
   };
@@ -143,10 +145,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div
         className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
-        lg:relative lg:translate-x-0 lg:shadow-none
-        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
+          fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+          lg:relative lg:translate-x-0 lg:shadow-none
+          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -170,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {user?.name}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
-                  {ROLE_NAME_BY_ID[user?.role_id || 1].replace("_", " ")}
+                  {userRoles.join(", ")}
                 </div>
               </div>
             </div>
@@ -185,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleItemClick(`/${item.id}`)}
+                  onClick={() => handleItemClick(item.id)}
                   className={`
                     w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors duration-150
                     ${

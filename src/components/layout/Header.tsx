@@ -1,8 +1,9 @@
 import React from "react";
 import { Bell, Menu, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { ROLE_NAME_BY_ID } from "../../types/auth";
+
 import { storage } from "../../utils/storage";
+import { ROLE_LABELS } from "../../constants/roles";
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -49,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                   {user?.name}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
-                  {ROLE_NAME_BY_ID[user?.role_id || 1].replace("_", " ")}
+                  {user?.role?.map((r) => ROLE_LABELS[r]).join(", ")}
                 </div>
               </div>
             </button>

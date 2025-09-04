@@ -1,14 +1,9 @@
 import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
-import { useGetUsers } from "../../services/users-service";
+import { useGetUsers, useEditUser } from "../../services/users-service";
 import { UserTable } from "./UserTable";
-import {
-  type RegisterPayload,
-  type User,
-  ROLE_ID_BY_NAME,
-  ROLE_LABELS,
-  ROLE_NAME_BY_ID,
-} from "../../types/auth";
+import { type RegisterPayload, type User, type Role } from "../../types/auth";
+import { ROLE_LABELS } from "../../constants/roles";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
 import { useRegister } from "../../services/auth-service";
@@ -17,7 +12,6 @@ import { Toast } from "../ui/Toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import EditUserModal from "./UserEditModal";
-import { useEditUser } from "../../services/users-service";
 import { Skeleton } from "../ui/skeleton";
 
 const UserManagement = () => {
@@ -25,7 +19,7 @@ const UserManagement = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
+  const [filterRole, setFilterRole] = useState<Role | "all">("all");
   const editUserMutation = useEditUser(String(selectedUser?.id || ""));
 
   const { data, isLoading } = useGetUsers();
@@ -42,7 +36,7 @@ const UserManagement = () => {
   });
 
   const { user } = useAuth();
-  const currentRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
+  const currentRole = user?.role?.[0] ?? null; // first role or null
 
   const handleAddUser = (user: Omit<RegisterPayload, "id" | "created_at">) => {
     registerUser(user, {
@@ -93,17 +87,25 @@ const UserManagement = () => {
 
   let filteredUsers: User[] = data ?? [];
 
+  // Example restriction: admin cannot see super admin
   if (currentRole === "admin") {
-    filteredUsers = filteredUsers.filter((u) => u.role_id !== 1);
+    filteredUsers = filteredUsers.filter(
+      (u) => !u.role.includes("super admin")
+    );
   }
+
+  // Search
   filteredUsers = filteredUsers.filter((user: User) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Role filter
   if (filterRole !== "all") {
-    filteredUsers = filteredUsers.filter(
-      (user: User) => user.role_id === Number(filterRole)
+    filteredUsers = filteredUsers.filter((user: User) =>
+      user.role.includes(filterRole)
     );
   }
+
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
@@ -167,17 +169,12 @@ const UserManagement = () => {
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <select
                 value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
+                onChange={(e) => setFilterRole(e.target.value as Role | "all")}
                 className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
                 <option value="all">All Roles</option>
                 {Object.entries(ROLE_LABELS).map(([role, label]) => (
-                  <option
-                    key={role}
-                    value={
-                      ROLE_ID_BY_NAME[role as keyof typeof ROLE_ID_BY_NAME]
-                    }
-                  >
+                  <option key={role} value={role}>
                     {label}
                   </option>
                 ))}
@@ -222,29 +219,24 @@ const UserManagement = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
-        allowedRoles={[
-          "super_admin",
-          "admin",
-          "estate_admin",
-          "tenant",
-          "landlord",
-        ]}
       />
+
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={handleCloseToast}
       />
+
       <EditUserModal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         onEdit={handleEditUser}
         user={selectedUser as User}
         allowedRoles={[
-          "super_admin",
+          "super admin",
           "admin",
-          "estate_admin",
+          "estate admin",
           "tenant",
           "landlord",
         ]}

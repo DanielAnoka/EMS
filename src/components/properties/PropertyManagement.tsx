@@ -1,17 +1,12 @@
 import { Building, Plus } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { ROLE_NAME_BY_ID } from "../../types/auth";
 import Card from "../ui/card";
-import { useGetProperties } from "../../services/property";
+import { useGetProperties, useCreateProperty } from "../../services/property";
 import SearchBar from "../ui/search";
 import { useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import AddProperty from "./AddProperty";
-import { useCreateProperty } from "../../services/property";
-import type {
-  CreateProperty,
-  CreatePropertyPayload,
-} from "../../types/property";
+import type { CreateProperty, CreatePropertyPayload } from "../../types/property";
 import { useQueryClient } from "@tanstack/react-query";
 import LoginDetails from "./loginDetails";
 import { Toast } from "../ui/Toast";
@@ -20,13 +15,12 @@ import { TableSkeleton } from "../ui/TableSkeleton";
 
 const PropertyManagement = () => {
   const { user } = useAuth();
-  const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
   const { data: propertiesData, isLoading } = useGetProperties();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { mutate: createProperty } = useCreateProperty();
   const queryClient = useQueryClient();
- 
+
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -37,14 +31,16 @@ const PropertyManagement = () => {
     isVisible: false,
   });
 
-  const isSuperOrAdmin = userRole === "super_admin" || userRole === "admin";
-  const isEstateAdmin = userRole === "estate_admin";
+  // 🔑 role checks using Role[]
+  const roles = user?.role ?? [];
+  const isSuperOrAdmin = roles.includes("super admin") || roles.includes("admin");
+  const isEstateAdmin = roles.includes("estate admin");
   const userEstateId = user?.user_estate?.id;
 
   // Filter based on estate id
   const visibleProperties = isSuperOrAdmin
     ? propertiesData ?? []
-    : isEstateAdmin
+    : isEstateAdmin && userEstateId
     ? (propertiesData ?? []).filter((p) => p.estate_id === userEstateId)
     : [];
 
@@ -73,6 +69,7 @@ const PropertyManagement = () => {
       },
     });
   };
+
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
@@ -126,17 +123,6 @@ const PropertyManagement = () => {
         />
       </div>
 
-      {/* <PropertyTable
-        property={visibleProperties}
-        onEdit={handleEdit}
-        onView={handleView}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
-        canEdit={isSuperOrAdmin || isEstateAdmin}
-        canView={isSuperOrAdmin || isEstateAdmin}
-        canDelete={isSuperOrAdmin || isEstateAdmin}
-      /> */}
-
       {!isLoading && visibleProperties.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-400 text-6xl mb-4">🏠</div>
@@ -150,7 +136,7 @@ const PropertyManagement = () => {
       ) : (
         <div className="mt-6">
           {isLoading ? (
-            <TableSkeleton rows={8} showActions  />
+            <TableSkeleton rows={8} showActions />
           ) : (
             <PropertyTable property={visibleProperties} />
           )}

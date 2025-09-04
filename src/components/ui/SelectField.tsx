@@ -7,7 +7,7 @@ interface RoleSelectProps {
   allowedRoles: string[];
   roleLabels: Record<string, string>;
   required?: boolean;
-  error?: string; // Optional: matches InputField pattern
+  error?: string;
 }
 
 export const RoleSelect: React.FC<RoleSelectProps> = ({

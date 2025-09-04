@@ -2,33 +2,34 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import {
   type RegisterPayload,
-  type UserRole,
-  ROLE_ID_BY_NAME,
-  ROLE_LABELS,
+  type Role,
 } from "../../types/auth";
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
+import { useGetRoles } from "../../services/users-service";
+import { ROLE_LABELS } from "../../constants/roles";
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (user: Omit<RegisterPayload, "id" | "created_at">) => void;
-  allowedRoles: UserRole[];
 }
 
 const AddUserModal: React.FC<AddUserModalProps> = ({
   isOpen,
   onClose,
   onAdd,
-  allowedRoles,
 }) => {
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    role: "" as UserRole | "",
+    role: "" as Role | "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const { data: roles, isLoading, error } = useGetRoles();
+
   if (!isOpen) return null;
 
   const handleChange = (key: keyof typeof form, value: string) => {
@@ -43,31 +44,22 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.password.trim()) newErrors.password = "Password is required";
     if (!form.role.trim()) newErrors.role = "Role is required";
-    if (!form.email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email))
       newErrors.email = "Enter a valid email";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-
-      setTimeout(() => {
-        setErrors({});
-      }, 1000);
-
+      setTimeout(() => setErrors({}), 1000);
       return;
     }
 
-    // Convert UserRole to RoleId
-    const roleId = form.role ? ROLE_ID_BY_NAME[form.role] : undefined;
-    if (!roleId) return;
-
-    if (!roleId) return;
+    if (!form.role) return;
 
     onAdd({
       name: form.name,
       email: form.email,
       password: form.password,
-      role_id: roleId,
+      role: form.role,
     });
 
     setForm({ name: "", email: "", password: "", role: "" });
@@ -104,7 +96,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             value={form.email}
             onChange={(value) => handleChange("email", value)}
             required
-            id={""}
+            id="email"
             error={errors.email}
           />
 
@@ -115,18 +107,26 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             value={form.password}
             onChange={(value) => handleChange("password", value)}
             required
-            id={""}
+            id="password"
             error={errors.password}
           />
-          <RoleSelect
-            label="Role"
-            value={form.role}
-            onChange={(value) => handleChange("role", value)}
-            allowedRoles={allowedRoles}
-            roleLabels={ROLE_LABELS}
-            required
-            error={errors.role}
-          />
+
+          {isLoading ? (
+            <p className="text-gray-500 text-sm">Loading roles...</p>
+          ) : error ? (
+            <p className="text-red-500 text-sm">Failed to load roles</p>
+          ) : (
+            <RoleSelect
+              label="Role"
+              value={form.role}
+              onChange={(value) => handleChange("role", value)}
+              allowedRoles={roles ?? []}
+              required
+              error={errors.role}
+              roleLabels={ROLE_LABELS}
+            />
+          )}
+
           <div className="flex space-x-3 pt-4">
             <button
               type="button"

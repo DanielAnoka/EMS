@@ -37,4 +37,12 @@ export const useEditUser = (userId: string) => {
   });
 };
 
-
+export const useGetRoles = () => {
+  return useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/roles");
+      return response.data;
+    },
+  });
+};

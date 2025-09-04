@@ -1,6 +1,7 @@
 import React from "react";
 import DashboardStats from "./DashboardStat";
 import { useAuth } from "../../hooks/useAuth";
+import { useGetRoles } from "../../services/users-service";
 
 const recentActivity = [
   {
@@ -33,6 +34,9 @@ const recentActivity = [
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const userName = user?.name || "User";
+  const { data: roles } = useGetRoles();
+  console.log("User Roles:", roles);
+  console.log("Authenticated User:", user);
 
   return (
     <div className="space-y-8">

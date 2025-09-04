@@ -10,20 +10,18 @@ import {
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { ROLE_NAME_BY_ID } from "../../types/auth";
+
 import { useGetUsers } from "../../services/users-service";
 import { useGetEstates } from "../../services/estates";
 import { useGetProperties } from "../../services/property";
 
 const DashboardStat: React.FC = () => {
   const { user } = useAuth();
-  const userRole = user ? ROLE_NAME_BY_ID[user.role_id] : null;
+  const userRole = user?.role?.[0] ?? null; // take first role if multiple
 
   // Only fetch what this role cares about
-  const enableUsers = userRole === "super_admin" || userRole === "admin";
-  const enableEstates =
-    userRole === "super_admin" ||
-    userRole === "admin" ;
+  const enableUsers = userRole === "super admin" || userRole === "admin";
+  const enableEstates = userRole === "super admin" || userRole === "admin";
   const enableProperties = enableEstates;
 
   const { data } = useGetUsers({ enabled: enableUsers });
@@ -32,20 +30,21 @@ const DashboardStat: React.FC = () => {
     enabled: enableProperties,
   });
 
-
-   const userCount      = data?.length ?? 0;
-  const estateCount    = estatesData?.length ?? 0;
-  const propertyCount  = propertiesData?.length ?? 0;
+  const userCount = data?.length ?? 0;
+  const estateCount = estatesData?.length ?? 0;
+  const propertyCount = propertiesData?.length ?? 0;
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
-      case "super_admin":
+      case "super admin":
         return [
           {
             title: "Total Users",
             value: userCount,
             icon: Users,
-        trend: userCount ? `+${userCount} new user${userCount > 1 ? "s" : ""}` : "No users yet",
+            trend: userCount
+              ? `+${userCount} new user${userCount > 1 ? "s" : ""}`
+              : "No users yet",
             trendDirection: userCount ? ("up" as const) : ("down" as const),
             color: userCount ? ("green" as const) : ("blue" as const),
           },
@@ -53,7 +52,9 @@ const DashboardStat: React.FC = () => {
             title: "Total Estates",
             value: estateCount,
             icon: Building,
-           trend: estateCount ? `+${estateCount} new estate${estateCount > 1 ? "s" : ""}` : "No estates yet",
+            trend: estateCount
+              ? `+${estateCount} new estate${estateCount > 1 ? "s" : ""}`
+              : "No estates yet",
             trendDirection: estateCount ? ("up" as const) : ("down" as const),
             color: estateCount ? ("green" as const) : ("blue" as const),
           },
@@ -61,18 +62,12 @@ const DashboardStat: React.FC = () => {
             title: "Total Properties",
             value: propertyCount,
             icon: Building,
-         trend: propertyCount ? `+${propertyCount} new property${propertyCount > 1 ? "s" : ""}` : "No properties yet",
+            trend: propertyCount
+              ? `+${propertyCount} new property${propertyCount > 1 ? "s" : ""}`
+              : "No properties yet",
             trendDirection: propertyCount ? ("up" as const) : ("down" as const),
             color: propertyCount ? ("green" as const) : ("blue" as const),
           },
-          // {
-          //   title: "System Alerts",
-          //   value: "7",
-          //   icon: AlertTriangle,
-          //   trend: "3 resolved today",
-          //   trendDirection: "down" as const,
-          //   color: "red" as const,
-          // },
         ];
 
       case "admin":
@@ -111,7 +106,7 @@ const DashboardStat: React.FC = () => {
           },
         ];
 
-      case "estate_admin":
+      case "estate admin":
         return [
           {
             title: "Total Residents",
