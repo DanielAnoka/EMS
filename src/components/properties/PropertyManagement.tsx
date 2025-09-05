@@ -14,7 +14,7 @@ import PropertyTable from "./table";
 import { TableSkeleton } from "../ui/TableSkeleton";
 
 const PropertyManagement = () => {
-  const { user } = useAuth();
+  const { user,role } = useAuth();
   const { data: propertiesData, isLoading } = useGetProperties();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,7 +32,7 @@ const PropertyManagement = () => {
   });
 
   // 🔑 role checks using Role[]
-  const roles = user?.role ?? [];
+  const roles = role ?? [];
   const isSuperOrAdmin = roles.includes("super admin") || roles.includes("admin");
   const isEstateAdmin = roles.includes("estate admin");
   const userEstateId = user?.user_estate?.id;

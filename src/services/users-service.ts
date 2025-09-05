@@ -2,16 +2,7 @@ import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-que
 import axiosInstance from "../utils/axiosInstance";
 import type { User } from "../types/auth";
 
-// export const useGetUsers = () => {
-//   return useQuery({
-//     queryKey: ["users"],
-//     queryFn: async () => {
-//       const response = await axiosInstance.get("/users");
-//       return response.data;
-//     },
-    
-//   });
-// };
+
 type Users = User[];
 type UsersQueryOpts = Partial<UseQueryOptions<Users, Error>>;
 

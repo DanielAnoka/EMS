@@ -41,16 +41,30 @@ type UserRes = {
 
 export type User = {
   id: number;
-  role_id: number;
   name: string;
   email: string;
   phone_number: string;
-  email_verified_at: string | null;
-  created_at: string;
-  updated_at: string | null;
+  estate: string | null;
+  roles: string[];
 };
 
 export type CurrentUser = {
+  id:number;
   user: UserRes;
   roles: string[];
+  user_estate: {
+    id: number;
+    lga_id: number;
+    name: string;
+    description: string | null;
+    owner: string;
+    address: string;
+    email: string;
+    phone_number: string;
+    status: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    created_by: number;
+  };
 };

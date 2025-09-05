@@ -1,42 +1,42 @@
 import React from "react";
 import DashboardStats from "./DashboardStat";
 import { useAuth } from "../../hooks/useAuth";
-import { useGetRoles } from "../../services/users-service";
 
-const recentActivity = [
-  {
-    action: "New tenant registered",
-    user: "John Doe - Apt 204",
-    time: "2 hours ago",
-  },
-  {
-    action: "Payment received",
-    user: "Sarah Smith - ₦25,000",
-    time: "4 hours ago",
-  },
-  {
-    action: "Property listed",
-    user: "3BR Apartment - Block C",
-    time: "6 hours ago",
-  },
-  {
-    action: "Maintenance request",
-    user: "Mike Johnson - Plumbing",
-    time: "8 hours ago",
-  },
-  {
-    action: "Service charge due",
-    user: "Multiple residents",
-    time: "1 day ago",
-  },
-];
+
+
+// const recentActivity = [
+//   {
+//     action: "New tenant registered",
+//     user: "John Doe - Apt 204",
+//     time: "2 hours ago",
+//   },
+//   {
+//     action: "Payment received",
+//     user: "Sarah Smith - ₦25,000",
+//     time: "4 hours ago",
+//   },
+//   {
+//     action: "Property listed",
+//     user: "3BR Apartment - Block C",
+//     time: "6 hours ago",
+//   },
+//   {
+//     action: "Maintenance request",
+//     user: "Mike Johnson - Plumbing",
+//     time: "8 hours ago",
+//   },
+//   {
+//     action: "Service charge due",
+//     user: "Multiple residents",
+//     time: "1 day ago",
+//   },
+// ];
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const userName = user?.name || "User";
-  const { data: roles } = useGetRoles();
-  console.log("User Roles:", roles);
-  console.log("Authenticated User:", user);
+  const userName = user?.user?.name || "User";
+
+ 
 
   return (
     <div className="space-y-8">
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
       <DashboardStats />
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             Recent Activity
@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

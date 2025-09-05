@@ -23,7 +23,7 @@ const Estate: React.FC = () => {
   const { data: estatesData, isLoading } = useGetEstates();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { mutate: createEstate } = useCreateEstate();
-  const { user } = useAuth();
+  const { role } = useAuth();
   const [selectedEstateId, setSelectedEstateId] = useState<string | null>(null);
   const { mutate: deleteEstate, isPending: isDeleting } = useDeleteEstate();
 
@@ -193,7 +193,7 @@ const Estate: React.FC = () => {
         ) : (
           <EstateTable
             estates={filteredEstates}
-            canDelete={user?.role_id === 1}
+            canDelete={role === "super admin"}
             onView={(estate) => setSelectedEstateId(String(estate.id))}
             onDelete={handleAskDelete}
           />

@@ -13,13 +13,13 @@ interface PropertyTableProps {
 
 const PropertyTable = ({
   property,
-  onEdit,
-  onView,
-  onDelete,
-  onToggleStatus,
-  canEdit,
-  canView,
-  canDelete,
+  // onEdit,
+  // onView,
+  // onDelete,
+  // onToggleStatus,
+  // canEdit,
+  // canView,
+  // canDelete,
 }: PropertyTableProps) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">

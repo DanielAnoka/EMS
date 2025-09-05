@@ -29,6 +29,7 @@ const UserManagement = () => {
   const { data, isLoading } = useGetUsers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { mutateAsync: registerUser } = useRegister();
+  
 
   const { role } = useAuth();
 
@@ -59,7 +60,7 @@ const UserManagement = () => {
   // Example restriction: admin cannot see super admin
   if (role === "admin") {
     filteredUsers = filteredUsers.filter(
-      (u) => !u.role.includes("super admin")
+      (u) => !u.roles.includes("super admin")
     );
   }
 
@@ -71,7 +72,7 @@ const UserManagement = () => {
   // Role filter
   if (filterRole !== "all") {
     filteredUsers = filteredUsers.filter((user: User) =>
-      user.role.includes(filterRole)
+      user.roles.includes(filterRole)
     );
   }
 

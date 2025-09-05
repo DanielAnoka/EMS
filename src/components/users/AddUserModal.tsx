@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
 import { useGetRoles } from "../../services/users-service";
@@ -22,13 +21,12 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     name: "",
     email: "",
     password: "",
+    phone: "",
     role: "" as Role | "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { data: roles, isLoading, error } = useGetRoles();
-
-  if (!isOpen) return null;
 
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -60,13 +58,27 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       role: form.role,
     });
 
-    setForm({ name: "", email: "", password: "", role: "" });
+    setForm({ name: "", email: "", password: "", role: "", phone: "" });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    // overlay
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
+        isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+      }`}
+      onClick={onClose}
+    >
+      {/* sliding panel */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
+        `}
+        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside panel
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Add New User</h2>
           <button
@@ -76,7 +88,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 overflow-y-auto max-h-[90vh]"
+        >
           <InputField
             label="Full Name"
             type="text"
@@ -97,7 +113,16 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             id="email"
             error={errors.email}
           />
-
+          <InputField
+            label="Phone Number"
+            type="tel"
+            placeholder="Enter phone number"
+            value={form.phone}
+            onChange={(value) => handleChange("phone", value)}
+            required
+            id="phone"
+            error={errors.email}
+          />
           <InputField
             label="Password"
             type="password"

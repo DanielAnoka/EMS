@@ -1,12 +1,12 @@
 import React from "react";
-import { type User, type Role } from "../../types/auth";
 import { Mail, Edit, Eye } from "lucide-react";
+import type { Role } from "../../services/auth";
+import type { User } from "../../types/auth";
 
 interface UserTableProps {
   users: User[];
   onEdit?: (user: User) => void;
   onView?: (user: User) => void;
-  onDelete?: (user: User) => void;
   canEdit?: boolean;
   canView?: boolean;
 }
@@ -35,80 +35,63 @@ export const UserTable: React.FC<UserTableProps> = ({
             <th className="px-6 py-3">S/N</th>
             <th className="px-6 py-3">Name</th>
             <th className="px-6 py-3">Role</th>
+            <th className="px-6 py-3">Phone number</th>
             <th className="px-6 py-3">Email</th>
-            <th className="px-6 py-3">Joined</th>
             <th className="px-6 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {users.map((user, index) => {
-            const userRoles = user.role ?? [];
-
-            return (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {index + 1}
-                </td>
-
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {user.name}
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {userRoles.length > 0 ? (
-                      userRoles.map((r) => (
-                        <span
-                          key={r}
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            roleColors[r] || "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {r.charAt(0).toUpperCase() + r.slice(1)}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 text-xs">No Role</span>
-                    )}
-                  </div>
-                </td>
-
-                <td className="px-6 py-4 flex items-center space-x-2 text-gray-600">
-                  <Mail className="w-4 h-4" />
-                  <span>{user.email}</span>
-                </td>
-
+          {users.map((user, index) => (
+            <tr key={user.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+              <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
+              <td className="px-6 py-4">
+                <div className="flex flex-wrap gap-2">
+                  {user.roles.length > 0 ? (
+                    user.roles.map((r) => (
+                      <span
+                        key={r}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          roleColors[r as Role]
+                        }`}
+                      >
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs">No Role</span>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 flex items-center space-x-2 text-gray-600">
+                <Mail className="w-4 h-4" />
+                <span>{user.email}</span>
+              </td>
                 <td className="px-6 py-4 text-gray-500">
-                  {new Date(user.created_at || "").toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                 {user.phone_number || "N/A"}
                 </td>
-
-                <td className="px-6 py-4 text-right flex justify-end space-x-3">
-                  {canView && (
-                    <button
-                      onClick={() => onView?.(user)}
-                      className="text-gray-500 hover:text-blue-600 transition"
-                      title="View user"
-                    >
-                      <Eye className="w-5 h-5" />
-                    </button>
-                  )}
-                  {canEdit && (
-                    <button
-                      onClick={() => onEdit?.(user)}
-                      className="text-gray-500 hover:text-green-600 transition"
-                      title="Edit user"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+              <td className="px-6 py-4 text-right flex justify-end space-x-3">
+                {canView && (
+                  <button
+                    onClick={() => onView?.(user)}
+                    className="text-gray-500 hover:text-blue-600 transition"
+                    title="View user"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={() => onEdit?.(user)}
+                    className="text-gray-500 hover:text-green-600 transition"
+                    title="Edit user"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

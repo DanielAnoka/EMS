@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { X, Save } from "lucide-react";
-import type { User, Role } from "../../types/auth";
-
+import type { User } from "../../types/auth";
 
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
+import type { Role } from "../../services/auth";
+import { useGetRoles } from "../../services/users-service";
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -27,7 +28,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   onClose,
   onEdit,
   user,
-  allowedRoles,
 }) => {
   const [form, setForm] = useState({
     name: "",
@@ -37,6 +37,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { data: roles } = useGetRoles();
 
   useEffect(() => {
     if (user) {
@@ -45,7 +46,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         email: user.email || "",
         password: "",
         // pick the first role if multiple exist
-        role: (user.role[0] as Role) || "",
+        role: (user.roles[0] as Role) || "",
       });
     }
   }, [user]);
@@ -72,12 +73,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       return;
     }
 
-    // update user with new role as array
     onEdit({
       ...user,
       name: form.name,
       email: form.email,
-      role: [form.role as Role],
+      roles: [form.role as Role],
     });
 
     onClose();
@@ -125,7 +125,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             label="Role"
             value={form.role}
             onChange={(value) => handleChange("role", value)}
-            allowedRoles={allowedRoles}
+            allowedRoles={roles ?? []}
             roleLabels={roleLabels}
             required
             error={errors.role}

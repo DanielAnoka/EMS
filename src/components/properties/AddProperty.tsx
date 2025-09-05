@@ -12,7 +12,7 @@ import InputField from "../ui/InputField";
 import { useAuth } from "../../hooks/useAuth";
 import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
-import TenantForm from "./tenantForm";
+import TenantForm from "./tenantform";
 
 interface AddPropertyProps {
   isOpen: boolean;

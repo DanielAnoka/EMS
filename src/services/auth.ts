@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -97,3 +102,55 @@ export const useRegister = () => {
     },
   });
 };
+
+export interface Statistics {
+  payments_received: number;
+  total_estates: number;
+  total_properties: number;
+  total_tenants: number;
+  total_users: number;
+}
+
+type StatisticsQueryOpts = Partial<UseQueryOptions<Statistics, Error>>;
+
+export const useGetStatistics = (opts?: StatisticsQueryOpts) =>
+  useQuery<Statistics, Error>({
+    queryKey: ["statistics"],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<Statistics>("/statistics");
+      return data;
+    },
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
+    ...opts,
+  });
+
+export interface EstateStatistics {
+  payments_received: number;
+  total_properties: number;
+  total_tenants: number;
+}
+
+type EstateStatisticsQueryOpts = Partial<
+  UseQueryOptions<EstateStatistics, Error>
+>;
+
+export const useGetEstateStatistics = (
+  estateId: number,
+  opts?: EstateStatisticsQueryOpts
+) =>
+  useQuery<EstateStatistics, Error>({
+    queryKey: ["estate-statistics", estateId],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<EstateStatistics>(
+        `/estate/statistics/${estateId}`
+      );
+      return data;
+    },
+    enabled: !!estateId, // don’t run unless estateId is provided
+    staleTime: 60_000, // 1 minute
+    gcTime: 5 * 60_000, // 5 minutes
+    retry: 1,
+    ...opts,
+  });

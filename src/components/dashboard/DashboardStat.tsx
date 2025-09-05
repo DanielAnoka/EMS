@@ -10,29 +10,39 @@ import {
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useGetStatistics } from "../../services/auth";
 
-import { useGetUsers } from "../../services/users-service";
-import { useGetEstates } from "../../services/estates";
-import { useGetProperties } from "../../services/property";
+// import { en } from "zod/locales";
+import { useGetEstateStatistics } from "../../services/auth";
 
 const DashboardStat: React.FC = () => {
   const { user, role } = useAuth();
-  const userRole = role ?? null; // take first role if multiple
+  const userRole = role ?? null;
 
   // Only fetch what this role cares about
-  const enableUsers = userRole === "super admin" || userRole === "admin";
-  const enableEstates = userRole === "super admin" || userRole === "admin";
-  const enableProperties = enableEstates;
 
-  const { data } = useGetUsers({ enabled: enableUsers });
-  const { data: estatesData } = useGetEstates({ enabled: enableEstates });
-  const { data: propertiesData } = useGetProperties({
-    enabled: enableProperties,
-  });
+  const enableStatistics = userRole === "super admin" || userRole === "admin";
+  const enableEstateStats = userRole === "estate admin";
 
-  const userCount = data?.length ?? 0;
-  const estateCount = estatesData?.length ?? 0;
-  const propertyCount = propertiesData?.length ?? 0;
+  const { data: statistics } = useGetStatistics({ enabled: enableStatistics });
+  const { data: estateStatistics } = useGetEstateStatistics(
+    user?.user_estate?.id ?? 0,
+    {
+      enabled: enableEstateStats,
+    }
+  );
+
+
+
+  const userCount = statistics?.total_users ?? 0;
+  const estateCount = statistics?.total_estates ?? 0;
+  const propertyCount = statistics?.total_properties ?? 0;
+  const revenue = statistics?.payments_received ?? 0;
+  const tenantCount = statistics?.total_tenants ?? 0;
+
+  const estatePayments = estateStatistics?.payments_received ?? 0;
+  const estateProperties = estateStatistics?.total_properties ?? 0;
+  const estateTenants = estateStatistics?.total_tenants ?? 0;
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
@@ -67,6 +77,26 @@ const DashboardStat: React.FC = () => {
               : "No properties yet",
             trendDirection: propertyCount ? ("up" as const) : ("down" as const),
             color: propertyCount ? ("green" as const) : ("blue" as const),
+          },
+          {
+            title: "Total Tenants",
+            value: tenantCount,
+            icon: Users,
+            trend: tenantCount
+              ? `+${tenantCount} new tenant${tenantCount > 1 ? "s" : ""}`
+              : "No tenants yet",
+            trendDirection: tenantCount ? ("up" as const) : ("down" as const),
+            color: tenantCount ? ("purple" as const) : ("blue" as const),
+          },
+          {
+            title: "Total Revenue",
+            value: revenue,
+            icon: Building,
+            trend: revenue
+              ? `+${revenue} new property${revenue > 1 ? "s" : ""}`
+              : "No properties yet",
+            trendDirection: revenue ? ("up" as const) : ("down" as const),
+            color: revenue ? ("green" as const) : ("blue" as const),
           },
         ];
 
@@ -109,36 +139,40 @@ const DashboardStat: React.FC = () => {
       case "estate admin":
         return [
           {
-            title: "Total Residents",
-            value: "156",
+            title: "Total Tenants",
+            value: estateTenants,
             icon: Users,
-            trend: "+8 new residents",
+            trend: estateTenants
+              ? `+${estateTenants} new tenant${estateTenants > 1 ? "s" : ""}`
+              : "No tenants yet",
             trendDirection: "up" as const,
             color: "blue" as const,
           },
           {
-            title: "Occupied Units",
-            value: "89",
+            title: "Total Properties",
+            value: estateProperties,
             icon: Home,
-            trend: "85% occupancy",
-            trendDirection: "up" as const,
-            color: "green" as const,
+            trend: estateProperties
+              ? `+${estateProperties} new property${
+                  estateProperties > 1 ? "s" : ""
+                }`
+              : "No properties yet",
+            trendDirection: estateProperties
+              ? ("up" as const)
+              : ("down" as const),
+            color: estateProperties ? ("green" as const) : ("blue" as const),
           },
           {
-            title: "Monthly Collections",
-            value: "₦345K",
+            title: "Payments",
+            value: estatePayments,
             icon: CreditCard,
-            trend: "+5% from last month",
-            trendDirection: "up" as const,
-            color: "purple" as const,
-          },
-          {
-            title: "Pending Approvals",
-            value: "12",
-            icon: Clock,
-            trend: "4 processed today",
-            trendDirection: "down" as const,
-            color: "yellow" as const,
+            trend: estatePayments
+              ? `+${estatePayments} new payment${estatePayments > 1 ? "s" : ""}`
+              : "No payments yet",
+            trendDirection: estatePayments
+              ? ("up" as const)
+              : ("down" as const),
+            color: estatePayments ? ("purple" as const) : ("blue" as const),
           },
         ];
 

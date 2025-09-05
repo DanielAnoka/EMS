@@ -11,6 +11,7 @@ import {
   BarChart3,
   Bell,
   AlertTriangle,
+  User2,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import type { Role } from "../../services/auth";
@@ -19,7 +20,7 @@ interface MenuItem {
   id: string;
   name: string;
   icon: React.ComponentType<SVGProps<SVGSVGElement>>;
-  roles: Role[]; // ✅ enforce union type here
+  roles: Role[]; 
 }
 
 const menuItems: MenuItem[] = [
@@ -27,7 +28,7 @@ const menuItems: MenuItem[] = [
     id: "dashboard",
     name: "Dashboard",
     icon: Home,
-    roles: ["super admin", "estate admin", "tenant", "admin"],
+    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
   },
   {
     id: "users",
@@ -45,7 +46,7 @@ const menuItems: MenuItem[] = [
     id: "properties",
     name: "Properties",
     icon: Building,
-    roles: ["super admin", "estate admin", "admin"],
+    roles: ["super admin", "estate admin", "admin", "landlord"],
   },
   {
     id: "charges",
@@ -75,7 +76,7 @@ const menuItems: MenuItem[] = [
     id: "notifications",
     name: "Notifications",
     icon: Bell,
-    roles: ["super admin", "estate admin", "tenant", "admin"],
+    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
   },
   {
     id: "roles",
@@ -88,6 +89,12 @@ const menuItems: MenuItem[] = [
     name: "Settings",
     icon: Settings,
     roles: ["super admin", "estate admin"],
+  },
+  {
+    id: "tenants",
+    name: "Tenants",
+    icon: User2,
+    roles: ["landlord"],
   },
 ];
 
