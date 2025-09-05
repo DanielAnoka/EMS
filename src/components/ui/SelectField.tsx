@@ -1,10 +1,18 @@
 import React from "react";
 
+type Role = {
+  id: number;
+  name: string;
+  guard_name: string;
+  created_at: string;
+  updated_at: string;
+};
+
 interface RoleSelectProps {
   label?: string;
-  value: string ;
+  value: string;
   onChange: (value: string) => void;
-  allowedRoles: string[];
+  allowedRoles: Role[];
   roleLabels: Record<string, string>;
   required?: boolean;
   error?: string;
@@ -17,7 +25,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   allowedRoles,
   roleLabels,
   required = false,
-  error
+  error,
 }) => {
   return (
     <div>
@@ -33,15 +41,14 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
         id="role"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        required={required} 
-       
+        required={required}
         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
           error ? "border-red-300" : "border-gray-300"
         }`}
       >
         {allowedRoles.map((role) => (
-          <option key={role} value={role}>
-            {roleLabels[role] || role}
+          <option key={role?.id} value={role.name}>
+            {roleLabels[role?.name] || role.name}
           </option>
         ))}
       </select>

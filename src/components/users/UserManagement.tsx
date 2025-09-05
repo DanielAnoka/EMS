@@ -2,17 +2,21 @@ import { Filter, Plus, Search, Users } from "lucide-react";
 import Card from "../ui/card";
 import { useGetUsers, useEditUser } from "../../services/users-service";
 import { UserTable } from "./UserTable";
-import { type RegisterPayload, type User, type Role } from "../../types/auth";
+import { type User } from "../../types/auth";
 import { ROLE_LABELS } from "../../constants/roles";
 import { useState } from "react";
 import AddUserModal from "./AddUserModal";
-import { useRegister } from "../../services/auth-service";
 import { TableSkeleton } from "../ui/TableSkeleton";
-import { Toast } from "../ui/Toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import EditUserModal from "./UserEditModal";
 import { Skeleton } from "../ui/skeleton";
+import { toast } from "sonner";
+import {
+  useRegister,
+  type RegisterPayload,
+  type Role,
+} from "../../services/auth";
 
 const UserManagement = () => {
   const queryClient = useQueryClient();
@@ -24,39 +28,14 @@ const UserManagement = () => {
 
   const { data, isLoading } = useGetUsers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { mutate: registerUser } = useRegister();
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-    isVisible: boolean;
-  }>({
-    message: "",
-    type: "success",
-    isVisible: false,
-  });
+  const { mutateAsync: registerUser } = useRegister();
 
-  const { user } = useAuth();
-  const currentRole = user?.role?.[0] ?? null; // first role or null
+  const { role } = useAuth();
 
-  const handleAddUser = (user: Omit<RegisterPayload, "id" | "created_at">) => {
-    registerUser(user, {
-      onSuccess: (newUser) => {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-
-        setToast({
-          message: `${newUser?.name ?? user.name} created successfully!`,
-          type: "success",
-          isVisible: true,
-        });
-      },
-      onError: () => {
-        setToast({
-          message: "Failed to create user.",
-          type: "error",
-          isVisible: true,
-        });
-      },
-    });
+  const handleAddUser = async (
+    user: Omit<RegisterPayload, "id" | "created_at">
+  ) => {
+    await registerUser(user);
   };
 
   const handleEditUser = (updatedUser: User) => {
@@ -65,22 +44,12 @@ const UserManagement = () => {
     editUserMutation.mutate(updatedUser, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["users"] });
-
-        setToast({
-          message: `${updatedUser.name} updated successfully!`,
-          type: "success",
-          isVisible: true,
-        });
-
+        toast.success(`user updated successfully!`);
         setIsEditOpen(false);
         setSelectedUser(null);
       },
       onError: () => {
-        setToast({
-          message: "Failed to update user.",
-          type: "error",
-          isVisible: true,
-        });
+        toast.error("Failed to update user.");
       },
     });
   };
@@ -88,7 +57,7 @@ const UserManagement = () => {
   let filteredUsers: User[] = data ?? [];
 
   // Example restriction: admin cannot see super admin
-  if (currentRole === "admin") {
+  if (role === "admin") {
     filteredUsers = filteredUsers.filter(
       (u) => !u.role.includes("super admin")
     );
@@ -106,10 +75,6 @@ const UserManagement = () => {
     );
   }
 
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, isVisible: false }));
-  };
-
   return (
     <>
       <div className="space-y-6">
@@ -123,7 +88,7 @@ const UserManagement = () => {
               Manage system users and their permissions
             </p>
           </div>
-          {currentRole !== "tenant" && (
+          {role !== "tenant" && (
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
@@ -219,13 +184,6 @@ const UserManagement = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
-      />
-
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={handleCloseToast}
       />
 
       <EditUserModal

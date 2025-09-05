@@ -16,8 +16,8 @@ import { useGetEstates } from "../../services/estates";
 import { useGetProperties } from "../../services/property";
 
 const DashboardStat: React.FC = () => {
-  const { user } = useAuth();
-  const userRole = user?.role?.[0] ?? null; // take first role if multiple
+  const { user, role } = useAuth();
+  const userRole = role ?? null; // take first role if multiple
 
   // Only fetch what this role cares about
   const enableUsers = userRole === "super admin" || userRole === "admin";

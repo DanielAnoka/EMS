@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import {
-  type RegisterPayload,
-  type Role,
-} from "../../types/auth";
+
 import InputField from "../ui/InputField";
 import { RoleSelect } from "../ui/SelectField";
 import { useGetRoles } from "../../services/users-service";
 import { ROLE_LABELS } from "../../constants/roles";
+import type { RegisterPayload, Role } from "../../services/auth";
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -36,7 +34,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
@@ -55,7 +53,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
 
     if (!form.role) return;
 
-    onAdd({
+    await onAdd({
       name: form.name,
       email: form.email,
       password: form.password,

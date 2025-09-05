@@ -13,7 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { type Role } from "../../types/auth"; 
+import type { Role } from "../../services/auth";
 
 interface MenuItem {
   id: string;
@@ -102,14 +102,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
-  // ✅ user.role is Role[]
-  const userRoles: Role[] = user?.role ?? [];
-
- 
-  const filteredMenuItems = menuItems.filter((item) =>
-    userRoles.some((role) => item.roles.includes(role))
+  const filteredMenuItems = menuItems.filter(
+    (item) => role && item.roles.includes(role as Role)
   );
 
   const handleItemClick = (itemId: string) => {
@@ -169,10 +165,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div>
                 <div className="text-sm font-semibold text-gray-900">
-                  {user?.name}
+                  {user?.user.name}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
-                  {userRoles.join(", ")}
+                  {role?.toLocaleUpperCase()}
                 </div>
               </div>
             </div>
