@@ -32,13 +32,13 @@ const renderStatus = (status: number) => {
 
 const ChargesTable = ({
   charges,
-  onEdit,
-  onView,
-  onDelete,
-  onToggleStatus,
-  canEdit,
-  canView,
-  canDelete,
+  // onEdit,
+  // onView,
+  // onDelete,
+  // onToggleStatus,
+  // canEdit,
+  // canView,
+  // canDelete,
 }: ChargesTableProps) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">

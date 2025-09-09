@@ -1,3 +1,4 @@
+import { Edit, Eye, Trash } from "lucide-react";
 import type { Property } from "../../types/property";
 
 interface PropertyTableProps {
@@ -13,13 +14,13 @@ interface PropertyTableProps {
 
 const PropertyTable = ({
   property,
-  // onEdit,
-  // onView,
-  // onDelete,
-  // onToggleStatus,
-  // canEdit,
-  // canView,
-  // canDelete,
+  onEdit,
+  onView,
+  onDelete,
+
+  canEdit = true,
+  canView = true,
+  canDelete = true,
 }: PropertyTableProps) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
@@ -78,20 +79,35 @@ const PropertyTable = ({
                 )}
               </td>
 
-              {/* <td className="px-6 py-3">
-                {canEdit && (
-                  <button onClick={() => onEdit?.(prop)}>Edit</button>
-                )}
+              <td className="px-6 py-4 text-right flex justify-end space-x-3">
                 {canView && (
-                  <button onClick={() => onView?.(prop)}>View</button>
+                  <button
+                    onClick={() => onView?.(prop)}
+                    className="text-gray-500 hover:text-blue-600 transition"
+                    title="View estate"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={() => onEdit?.(prop)}
+                    className="text-gray-500 hover:text-green-600 transition"
+                    title="Edit estate"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
                 )}
                 {canDelete && (
-                  <button onClick={() => onDelete?.(prop)}>Delete</button>
+                  <button
+                    onClick={() => onDelete?.(prop)}
+                    className="text-gray-500 hover:text-red-600 transition"
+                    title="Delete estate"
+                  >
+                    <Trash className="w-5 h-5" />
+                  </button>
                 )}
-                <button onClick={() => onToggleStatus?.(prop)}>
-                  Toggle Status
-                </button>
-              </td> */}
+              </td>
             </tr>
           ))}
         </tbody>

@@ -13,6 +13,7 @@ import { useAuth } from "../../hooks/useAuth";
 import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
 import TenantForm from "./tenantform";
+import { useGetEstates } from "../../services/estates";
 
 interface AddPropertyProps {
   isOpen: boolean;
@@ -24,8 +25,11 @@ const initialLandlord: LandlordInfo = { name: "", email: "" };
 const initialTenant: TenantInfo = { name: "", email: "", status: "active" };
 
 const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
-  const { user } = useAuth();
-  // console.log("user", user);
+  const { user, role } = useAuth();
+  const userRole = role ?? null;
+
+  const enableEstateStats = userRole === "super admin" || userRole === "admin";
+  const { data: estates } = useGetEstates({ enabled: enableEstateStats });
 
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
@@ -48,11 +52,10 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   });
 
   useEffect(() => {
-    if (user?.user_estate?.id) {
-      setForm((prev) => ({ ...prev, estate_id: user.user_estate.id }));
+    if (user?.user?.user_estate?.id) {
+      setForm((prev) => ({ ...prev, estate_id: user.user.user_estate.id }));
     }
   }, [user]);
-
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
@@ -190,9 +193,26 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
           }),
     };
 
-    //  console.log("property_payload", payload);
-
     onAdd(payload);
+
+    setForm({
+      title: "",
+      price: "",
+      description: "",
+      status: "available",
+      bedrooms: "",
+      bathrooms: "",
+      toilets: "",
+      property_type_id: 0,
+      estate_id: 0,
+      owner_status: null,
+      landlord_name: "",
+      landlord_email: "",
+      tenant_status: false,
+      tenant_name: "",
+      tenant_email: "",
+    });
+    onClose();
   };
 
   return (
@@ -297,6 +317,23 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
               ]}
               error={errors.status}
             />
+            {(user?.roles.includes("super admin") ||
+              user?.roles.includes("admin")) && (
+              <SelectField
+                id="estate_id"
+                label="Estates"
+                value={form.estate_id}
+                onChange={(v) => handleChange("estate_id", Number(v))}
+                placeholder="Select estate"
+                options={
+                  estates?.map((estate) => ({
+                    label: estate.name,
+                    value: estate.id.toString(),
+                  })) ?? []
+                }
+                error={errors.estate_id}
+              />
+            )}
           </div>
 
           <InputField

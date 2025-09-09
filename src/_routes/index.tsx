@@ -12,6 +12,7 @@ import EstateManagement from "../components/estate/estate";
 import UserManagement from "../components/users/UserManagement";
 import PropertyManagement from "../components/properties/PropertyManagement";
 import Charges from "../components/charges/ChargeManagement";
+import TenantManagement from "../components/tenants/TenantManagement";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -51,7 +52,12 @@ export const routes: AppRoute[] = [
     children: [{ index: true, element: Charges, protected: true }],
   },
 
-  // more route objects
+  {
+    path: "/tenants",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: TenantManagement, protected: true }],
+  },
 ];
 
 // FUNCTION TO CREATE PROTECTED AND PUBLIC ROUTES

@@ -17,6 +17,7 @@ import EstateDetails from "./EstateDetails";
 import { Skeleton } from "../ui/skeleton";
 import DeleteConfirmModal from "../ui/deleteModal";
 
+
 const Estate: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");

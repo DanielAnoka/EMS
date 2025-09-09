@@ -27,6 +27,15 @@ type Role = {
   pivot: Pivot;
 };
 
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  phone_number: string;
+  estate: string | null;
+  roles: string[];
+};
+
 type UserRes = {
   id: number;
   role_id: number | null;
@@ -37,21 +46,6 @@ type UserRes = {
   created_at: string;
   updated_at: string;
   roles: Role[];
-};
-
-export type User = {
-  id: number;
-  name: string;
-  email: string;
-  phone_number: string;
-  estate: string | null;
-  roles: string[];
-};
-
-export type CurrentUser = {
-  id:number;
-  user: UserRes;
-  roles: string[];
   user_estate: {
     id: number;
     lga_id: number;
@@ -67,4 +61,11 @@ export type CurrentUser = {
     deleted_at: string | null;
     created_by: number;
   };
+};
+
+export type CurrentUser = {
+  id: number;
+  permissions: string[];
+  user: UserRes;
+  roles: string[];
 };

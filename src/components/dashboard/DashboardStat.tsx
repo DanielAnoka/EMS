@@ -10,29 +10,30 @@ import {
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useGetStatistics } from "../../services/auth";
+import { useGetStatistics, useGetEstateStatistics } from "../../services/auth";
+import { Skeleton } from "../ui/skeleton";
 
-// import { en } from "zod/locales";
-import { useGetEstateStatistics } from "../../services/auth";
 
 const DashboardStat: React.FC = () => {
   const { user, role } = useAuth();
   const userRole = role ?? null;
 
   // Only fetch what this role cares about
-
   const enableStatistics = userRole === "super admin" || userRole === "admin";
   const enableEstateStats = userRole === "estate admin";
 
-  const { data: statistics } = useGetStatistics({ enabled: enableStatistics });
-  const { data: estateStatistics } = useGetEstateStatistics(
-    user?.user_estate?.id ?? 0,
-    {
-      enabled: enableEstateStats,
-    }
+
+  const { data: statistics, isLoading: isStatisticsLoading } = useGetStatistics(
+    { enabled: enableStatistics }
   );
 
+  const { data: estateStatistics, isLoading: isEstateStatsLoading } =
+    useGetEstateStatistics(user?.user?.user_estate?.id ?? 0, {
+      enabled: enableEstateStats,
+    });
 
+
+  const isLoading = isStatisticsLoading || isEstateStatsLoading ;
 
   const userCount = statistics?.total_users ?? 0;
   const estateCount = statistics?.total_estates ?? 0;
@@ -43,6 +44,9 @@ const DashboardStat: React.FC = () => {
   const estatePayments = estateStatistics?.payments_received ?? 0;
   const estateProperties = estateStatistics?.total_properties ?? 0;
   const estateTenants = estateStatistics?.total_tenants ?? 0;
+
+
+  // const totalProperties  = propertyStatistics?.
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
@@ -211,6 +215,25 @@ const DashboardStat: React.FC = () => {
             color: "green" as const,
           },
         ];
+      case "landlord":
+        return [
+          {
+            title: "Total Properties",
+            value: "25",
+            icon: Building,
+            trend: "+2 new properties",
+            trendDirection: "up" as const,
+            color: "green" as const,
+          },
+          {
+            title: "Total Tenants",
+            value: "100",
+            icon: Users,
+            trend: "+5 new tenants",
+            trendDirection: "up" as const,
+            color: "blue" as const,
+          },
+        ];
 
       default:
         return [
@@ -234,9 +257,16 @@ const DashboardStat: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat, index) => (
-        <StatCard key={index} {...stat} />
-      ))}
+      {isLoading
+        ? Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              // className="p-4 border rounded-lg shadow bg-white flex flex-col space-y-3"
+            >
+              <Skeleton className="h-16 w-full bg-slate-600" />
+            </div>
+          ))
+        : stats.map((stat, index) => <StatCard key={index} {...stat} />)}
     </div>
   );
 };

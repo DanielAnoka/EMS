@@ -1,5 +1,5 @@
 export interface Charge {
-  id:number;
+  id: number;
   name: string;
   amount: number;
   duration: number;
@@ -7,19 +7,18 @@ export interface Charge {
   property_type_id: number | null;
   status: number;
   user_id: number;
-  created_at: string
+  created_at: string;
 }
 
 export interface CreateChargePayload {
   name: string;
   amount: number;
   duration: number;
-  estate_id: number;
+  estate_id: number | null;
   property_type_id: number | null;
   status: number;
   user_id: number;
 }
-
 
 export type DurationType = "monthly" | "yearly" | "one_time";
 

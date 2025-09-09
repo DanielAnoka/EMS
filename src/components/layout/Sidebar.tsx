@@ -20,7 +20,7 @@ interface MenuItem {
   id: string;
   name: string;
   icon: React.ComponentType<SVGProps<SVGSVGElement>>;
-  roles: Role[]; 
+  roles: Role[];
 }
 
 const menuItems: MenuItem[] = [
@@ -47,6 +47,12 @@ const menuItems: MenuItem[] = [
     name: "Properties",
     icon: Building,
     roles: ["super admin", "estate admin", "admin", "landlord"],
+  },
+  {
+    id: "tenants",
+    name: "Tenants",
+    icon: User2,
+    roles: ["landlord","estate admin"],
   },
   {
     id: "charges",
@@ -89,12 +95,6 @@ const menuItems: MenuItem[] = [
     name: "Settings",
     icon: Settings,
     roles: ["super admin", "estate admin"],
-  },
-  {
-    id: "tenants",
-    name: "Tenants",
-    icon: User2,
-    roles: ["landlord"],
   },
 ];
 

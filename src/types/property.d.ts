@@ -65,7 +65,7 @@ export interface Property {
   id: number;
   title: string;
   description: string;
-  price: string; // keeping as string since backend returns "2500000.00"
+  price: string; 
   status: "available" | "rented" | "sold"; 
   bedrooms: number;
   bathrooms: number;
@@ -78,4 +78,8 @@ export interface Property {
   location: string | null;
   created_at: string;
   updated_at: string;
+  landlord_name: string ;
+  landlord_email: string;
+  tenant_name: string;
+  tenant_email: string;
 }

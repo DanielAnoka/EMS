@@ -58,7 +58,7 @@ const EstateDetails = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => setActiveTab(tab.id as "overview" | "tenants")}
                   className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-150 ${
                     isActive
                       ? "border-blue-500 text-blue-600"
@@ -101,20 +101,26 @@ const EstateDetails = ({
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <User className="w-5 h-5 text-gray-400 mr-3" />
-                      <span className="text-gray-700">{ isLoading ? "Loading..." : estate?.owner}</span>
+                      <span className="text-gray-700">
+                        {isLoading ? "Loading..." : estate?.owner}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <MapPin className="w-5 h-5 text-gray-400 mr-3" />
-                      <span className="text-gray-700">{ isLoading ? "Loading..." : estate?.address}</span>
+                      <span className="text-gray-700">
+                        {isLoading ? "Loading..." : estate?.address}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <Mail className="w-5 h-5 text-gray-400 mr-3" />
-                      <span className="text-gray-700">{ isLoading ? "Loading..." : estate?.email}</span>
+                      <span className="text-gray-700">
+                        {isLoading ? "Loading..." : estate?.email}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <Phone className="w-5 h-5 text-gray-400 mr-3" />
                       <span className="text-gray-700">
-                        { isLoading ? "Loading..." : estate?.phone_number}
+                        {isLoading ? "Loading..." : estate?.phone_number}
                       </span>
                     </div>
                   </div>
@@ -150,7 +156,6 @@ const EstateDetails = ({
                         </div>
                         <div className="flex items-center">
                           <Building className="w-4 h-4 mr-1" />
-                       
                         </div>
                       </div>
                     </div>

@@ -1,83 +1,113 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Building, Plus } from "lucide-react";
+import { toast } from "sonner";
+
 import { useAuth } from "../../hooks/useAuth";
-import Card from "../ui/card";
 import { useGetProperties, useCreateProperty } from "../../services/property";
+
+import Card from "../ui/card";
 import SearchBar from "../ui/search";
-import { useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import AddProperty from "./AddProperty";
-import type { CreateProperty, CreatePropertyPayload } from "../../types/property";
-import { useQueryClient } from "@tanstack/react-query";
 import LoginDetails from "./loginDetails";
-import { Toast } from "../ui/Toast";
 import PropertyTable from "./table";
 import { TableSkeleton } from "../ui/TableSkeleton";
 
+import type {
+  CreateProperty,
+  CreatePropertyPayload,
+} from "../../types/property";
+import DetailsModal from "./DetailsModal";
+
 const PropertyManagement = () => {
-  const { user,role } = useAuth();
-  const { data: propertiesData, isLoading } = useGetProperties();
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const { mutate: createProperty } = useCreateProperty();
+  const { user, role } = useAuth();
+
   const queryClient = useQueryClient();
 
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-    isVisible: boolean;
-  }>({
-    message: "",
-    type: "success",
-    isVisible: false,
-  });
+  // API
+  const { data: propertiesData, isLoading } = useGetProperties();
 
-  // 🔑 role checks using Role[]
-  const roles = role ?? [];
-  const isSuperOrAdmin = roles.includes("super admin") || roles.includes("admin");
-  const isEstateAdmin = roles.includes("estate admin");
-  const userEstateId = user?.user_estate?.id;
+  const { mutate: createProperty } = useCreateProperty();
 
-  // Filter based on estate id
-  const visibleProperties = isSuperOrAdmin
-    ? propertiesData ?? []
-    : isEstateAdmin && userEstateId
-    ? (propertiesData ?? []).filter((p) => p.estate_id === userEstateId)
-    : [];
-
+  // UI state
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [createdProperty, setCreatedProperty] =
     useState<CreatePropertyPayload | null>(null);
+
+  const roles = useMemo<string[]>(() => {
+    if (!role) return [];
+    return Array.isArray(role)
+      ? role.map((r) => String(r).toLowerCase())
+      : [String(role).toLowerCase()];
+  }, [role]);
+
+  const isSuperOrAdmin =
+    roles.includes("super admin") || roles.includes("admin");
+  const isEstateAdmin = roles.includes("estate admin");
+  const isLandlord = roles.includes("landlord");
+
+  // Safely read estate id from either shape
+  const userEstateId =
+    user?.user?.user_estate?.id ?? user?.user?.user_estate?.id ?? null;
+
+  const userId = user?.user?.id ?? null;
+
+  // Base list
+  const allProperties = propertiesData ?? [];
+
+  // Role-based visibility
+  const visibleProperties = useMemo(() => {
+    if (isSuperOrAdmin) return allProperties;
+
+    if (isEstateAdmin && userEstateId) {
+      return allProperties.filter((p) => p.estate_id === userEstateId);
+    }
+
+    if (isLandlord && userId) {
+      return allProperties.filter((p) => p.owner_id === userId);
+    }
+
+    return [];
+  }, [allProperties, isSuperOrAdmin, isEstateAdmin, userEstateId, isLandlord]);
+
+  // (Optional) search filter — keeps your SearchBar wiring
+  const searchLower = searchTerm.trim().toLowerCase();
+  const filteredProperties = useMemo(() => {
+    if (!searchLower) return visibleProperties;
+    return visibleProperties.filter((p) => {
+      const haystack = [p.title, p.description]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(searchLower);
+    });
+  }, [visibleProperties, searchLower]);
 
   const handleSubmit = (property: CreateProperty) => {
     createProperty(property, {
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: ["properties"] });
-
         setCreatedProperty(data);
-        setToast({
-          message: `${property.title} created successfully!`,
-          type: "success",
-          isVisible: true,
-        });
+        toast.success(`${property.title} created successfully!`);
+        setIsAddModalOpen(false);
       },
       onError: (err) => {
-        console.log(err.message);
-        setToast({
-          message: `Failed to create estate`,
-          type: "error",
-          isVisible: true,
-        });
+        console.error(err);
+        toast.error(
+          `Failed to create property: ${err?.message ?? "Unknown error"}`
+        );
       },
     });
-  };
-
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
   return (
     <>
       <div className="space-y-6">
-        {/* header */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
@@ -86,9 +116,11 @@ const PropertyManagement = () => {
             <p className="text-gray-600 mt-1">
               {isSuperOrAdmin && "Manage and monitor all properties"}
               {isEstateAdmin && "Manage and monitor all estate properties"}
+              {isLandlord && "View your assigned properties"}
             </p>
           </div>
-          {isEstateAdmin && (
+
+          {(isSuperOrAdmin || isEstateAdmin) && (
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
               onClick={() => setIsAddModalOpen(true)}
@@ -99,7 +131,7 @@ const PropertyManagement = () => {
           )}
         </div>
 
-        {/* cards */}
+        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             <>
@@ -110,27 +142,31 @@ const PropertyManagement = () => {
           ) : (
             <Card
               label="Total Properties"
-              value={visibleProperties.length}
+              value={filteredProperties.length}
               icon={Building}
             />
           )}
         </div>
 
+        {/* Search */}
         <SearchBar
-          placeholder="Search Estates..."
+          placeholder="Search Properties..."
           value={searchTerm}
           onChange={setSearchTerm}
         />
       </div>
 
-      {!isLoading && visibleProperties.length === 0 ? (
+      {/* Table / Empty */}
+      {!isLoading && filteredProperties.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-400 text-6xl mb-4">🏠</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Property found
           </h3>
           <p className="text-gray-600">
-            Try adjusting your search or filter criteria
+            {isSuperOrAdmin || isEstateAdmin
+              ? "Try adjusting your search or filter criteria"
+              : "No properties are assigned to your account"}
           </p>
         </div>
       ) : (
@@ -138,30 +174,37 @@ const PropertyManagement = () => {
           {isLoading ? (
             <TableSkeleton rows={8} showActions />
           ) : (
-            <PropertyTable property={visibleProperties} />
+            <PropertyTable
+              property={filteredProperties}
+              onView={(propertiesData) => setSelectedPropertyId(propertiesData.id)}
+              onEdit={() => {}}
+            />
           )}
         </div>
       )}
 
+      {/* Modals */}
       <AddProperty
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleSubmit}
       />
 
+   {selectedPropertyId && (
+      <DetailsModal
+        isOpen={!!selectedPropertyId}
+        onClose={() => setSelectedPropertyId(null)}
+        propertyId={selectedPropertyId}
+      />
+   )}
+
       {createdProperty && (
         <LoginDetails
-          isOpen={!!createProperty}
+          isOpen={!!createdProperty}
           onClose={() => setCreatedProperty(null)}
           property={createdProperty}
         />
       )}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={handleCloseToast}
-      />
     </>
   );
 };

@@ -1,115 +1,110 @@
-import { CreditCard, Plus } from "lucide-react";
-import { useGetCharges, useCreateCharge } from "../../services/charges";
-import Card from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
-import SearchBar from "../ui/search";
-import { useMemo, useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import {type Role } from "../../types/auth"; // ✅ import Role type
-import ChargesTable from "./table";
-import type { Charge, CreateChargePayload } from "../../types/charges";
-import { TableSkeleton } from "../ui/TableSkeleton";
-import AddCharges from "./AddCharges";
-import { norm, statusText } from "../../utils";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Toast } from "../ui/Toast";
+import { CreditCard, Plus } from "lucide-react";
+import { toast } from "sonner";
+
+import { useAuth } from "../../hooks/useAuth";
+import { useGetCharges, useCreateCharge } from "../../services/charges";
+
+import Card from "../ui/card";
+import SearchBar from "../ui/search";
+import { Skeleton } from "../ui/skeleton";
+import AddCharges from "./AddCharges";
+import ChargesTable from "./table";
+import { TableSkeleton } from "../ui/TableSkeleton";
+
+import type { Charge, CreateChargePayload } from "../../types/charges";
+import { norm } from "../../utils";
 
 const Charges = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  
   const queryClient = useQueryClient();
+
+  // API
+  const { data: chargesData, isLoading } = useGetCharges();
+  // console.log(chargesData);
   const { mutate: createCharges } = useCreateCharge();
-  const { data: charges = [], isLoading } = useGetCharges();
 
-  const [searchTerm, setSearchTerm] = useState("");
+  // UI state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-    isVisible: boolean;
-  }>({
-    message: "",
-    type: "success",
-    isVisible: false,
-  });
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const userRole: Role | null = user?.role?.[0] ?? null; // ✅ role is array in your type
-  const userEstateId = user?.user_estate?.id;
+  
+  const roles = useMemo<string[]>(() => {
+    if (!role) return [];
+    return Array.isArray(role)
+      ? role.map((r) => String(r).toLowerCase())
+      : [String(role).toLowerCase()];
+  }, [role]);
 
-  // ✅ Role-based visibility
+  const isSuperOrAdmin =
+    roles.includes("super admin") || roles.includes("admin");
+  const isEstateAdmin = roles.includes("estate admin");
+
+  
+  const userEstateId =
+    user?.user?.user_estate?.id ??
+    user?.user?.user_estate?.id ?? 
+    null;
+
+  // Base list
+  const allCharges: Charge[] = (chargesData ?? []) as Charge[];
+
+  // Role-based visibility
   const visibleCharges: Charge[] = useMemo(() => {
-    if (!userRole) return [];
-    if (userRole === "super admin" || userRole === "admin") return charges;
-    if (userRole === "estate admin")
-      return charges.filter(
-        (c: { estate_id: number | undefined }) => c.estate_id === userEstateId
-      );
+    if (isSuperOrAdmin) return allCharges;
+
+    if (isEstateAdmin && userEstateId) {
+      return allCharges.filter((c) => c.estate_id === userEstateId);
+    }
+
+    // Other roles currently see nothing (adjust when needed)
     return [];
-  }, [userRole, charges, userEstateId]);
+  }, [allCharges, isSuperOrAdmin, isEstateAdmin, userEstateId]);
 
-  // ✅ Search-aware filter
+  // Search (case/diacritic-insensitive via norm)
+  const searchQ = norm(searchTerm);
   const filteredCharges: Charge[] = useMemo(() => {
-    const term = norm(searchTerm);
-    if (!term) return visibleCharges;
-
+    if (!searchQ) return visibleCharges;
     return visibleCharges.filter((c) => {
-      const haystack = [
-        c.name,
-        c.amount,
-        c.duration,
-        c.estate_id,
-        c.property_type_id,
-        statusText(c.status),
-      ]
-        .map(norm)
+      const haystack = [c.name, String(c.amount), String(c.duration)]
+        .filter(Boolean)
         .join(" ");
-
-      return haystack.includes(term);
+      return norm(haystack).includes(searchQ);
     });
-  }, [visibleCharges, searchTerm]);
+  }, [visibleCharges, searchQ]);
 
-  // ✅ Handle add charges
-  const handleSubmit = (chargesData: CreateChargePayload) => {
-    createCharges(chargesData, {
-      onSuccess: () => {
+  const handleSubmit = (payload: CreateChargePayload) => {
+    createCharges(payload, {
+      onSuccess: (created) => {
         queryClient.invalidateQueries({ queryKey: ["charges"] });
-        setToast({
-          message: `${chargesData.name} created successfully!`,
-          type: "success",
-          isVisible: true,
-        });
+        toast.success(`${created.name} created successfully!`);
+        setIsAddModalOpen(false);
       },
-      onError: () => {
-        setToast({
-          message: `Failed to create charge`,
-          type: "error",
-          isVisible: true,
-        });
+      onError: (err: unknown) => {
+        console.error(err);
+        toast.error("Failed to create charge.");
       },
     });
-  };
-
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
   return (
     <>
       <div className="space-y-6">
-        {/* header */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Charge Management
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900">Charge Management</h2>
             <p className="text-gray-600 mt-1">
-              Create and manage service charges for residents
+              {isSuperOrAdmin && "Manage and monitor all charges"}
+              {isEstateAdmin && "Manage and monitor your estate charges"}
+              {!isSuperOrAdmin && !isEstateAdmin && "View charges (restricted access)"}
             </p>
           </div>
 
-          {/* ✅ Only Admins / Super Admin / Estate Admin can add charges */}
-          {(userRole === "super admin" ||
-            userRole === "admin" ||
-            userRole === "estate admin") && (
+          {(isSuperOrAdmin || isEstateAdmin) && (
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
               onClick={() => setIsAddModalOpen(true)}
@@ -120,7 +115,7 @@ const Charges = () => {
           )}
         </div>
 
-        {/* cards */}
+        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             <>
@@ -129,56 +124,49 @@ const Charges = () => {
               <Skeleton className="h-16 w-full bg-slate-600" />
             </>
           ) : (
-            <Card
-              label="Total Charges"
-              value={visibleCharges.length}
-              icon={CreditCard}
-            />
+            <Card label="Total Charges" value={filteredCharges.length} icon={CreditCard} />
           )}
         </div>
 
-        {/* search */}
+        {/* Search */}
         <SearchBar
           placeholder="Search charges..."
           value={searchTerm}
           onChange={setSearchTerm}
         />
-
-        {/* empty state OR table */}
-        {!isLoading && filteredCharges.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🏠</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Charge found
-            </h3>
-            <p className="text-gray-600">
-              Try adjusting your search or filter criteria
-            </p>
-          </div>
-        ) : (
-          <div className="mt-6">
-            {isLoading ? (
-              <TableSkeleton rows={8} showActions />
-            ) : (
-              <ChargesTable charges={filteredCharges} />
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Add Charges modal */}
+      {/* Table / Empty */}
+      {!isLoading && filteredCharges.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 text-6xl mb-4">🏠</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Charge found</h3>
+          <p className="text-gray-600">
+            {isSuperOrAdmin || isEstateAdmin
+              ? "Try adjusting your search or filter criteria"
+              : "No charges are visible for your role"}
+          </p>
+          {isEstateAdmin && !userEstateId && (
+            <p className="text-gray-500 mt-2">
+              Your account isn’t linked to an estate. Contact an admin to assign an estate.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6">
+          {isLoading ? (
+            <TableSkeleton rows={8} showActions />
+          ) : (
+            <ChargesTable charges={filteredCharges} />
+          )}
+        </div>
+      )}
+
+      {/* Modals */}
       <AddCharges
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleSubmit}
-      />
-
-      {/* Toast */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={handleCloseToast}
       />
     </>
   );

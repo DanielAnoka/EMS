@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
-import type { Charge } from "../types/charges";
+import type {  CreateChargePayload } from "../types/charges";
 
 export const useGetCharges = () => {
   return useQuery({
@@ -12,9 +12,10 @@ export const useGetCharges = () => {
   });
 };
 
+
 export const useCreateCharge = () => {
   return useMutation({
-    mutationFn: async (payload: Charge) => {
+    mutationFn: async (payload: CreateChargePayload) => {
       const response = await axiosInstance.post("/create/charge", payload);
       return response.data;
     },

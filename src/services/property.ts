@@ -24,6 +24,20 @@ export const useGetProperties = (opts?: PropertiesQueryOpts) =>
     ...opts,
   });
 
+export const useGetPropertyById = (id: number) =>
+  useQuery<Property, Error>({
+    queryKey: ["properties", id],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<Property>(
+        `/estate/property/${id}`
+      );
+      return data;
+    },
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
+  });
+
 export const useCreateProperty = () => {
   return useMutation({
     mutationFn: async (payload: CreateProperty) => {
