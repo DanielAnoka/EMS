@@ -88,6 +88,10 @@ const Charges = () => {
       },
     });
   };
+  const isBusy =
+  isLoading ||               // global/all charges
+  isLoadingByEstateId   // estate-scoped fetch
+ 
 
   return (
     <>
@@ -116,7 +120,7 @@ const Charges = () => {
 
         {/* cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
+          {isLoading || isLoadingByEstateId ? (
             <>
               <Skeleton className="h-16 w-full bg-slate-600" />
               <Skeleton className="h-16 w-full bg-slate-600" />
@@ -139,7 +143,7 @@ const Charges = () => {
         />
 
         {/* empty state OR table */}
-        {!isLoading && filteredCharges.length === 0 ? (
+        {!isBusy  && filteredCharges.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🏠</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">

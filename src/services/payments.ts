@@ -40,6 +40,7 @@ export const useGetAllPayments = (opts?: PaymentsQueryOpts) =>
       const { data } = await axiosInstance.get<Payments>("/all/payments");
       return data;
     },
+   
     ...DEFAULTS,
     ...opts,
   });
