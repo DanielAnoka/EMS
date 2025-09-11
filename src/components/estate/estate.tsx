@@ -5,7 +5,6 @@ import SearchBar from "../ui/search";
 import { useDeleteEstate, useGetEstates } from "../../services/estates";
 import AddEstateModal from "./AddEstateModal";
 import { useCreateEstate } from "../../services/estates";
-import { Toast } from "../ui/Toast";
 import type { CreateEstate, CreateEstatePayload } from "../../types/estate";
 import EstateTable from "./EstateTable";
 import { TableSkeleton } from "../ui/TableSkeleton";
@@ -16,7 +15,7 @@ import { useAuth } from "../../hooks/useAuth";
 import EstateDetails from "./EstateDetails";
 import { Skeleton } from "../ui/skeleton";
 import DeleteConfirmModal from "../ui/deleteModal";
-
+import { toast } from "sonner";
 
 const Estate: React.FC = () => {
   const queryClient = useQueryClient();
@@ -41,33 +40,17 @@ const Estate: React.FC = () => {
     deleteEstate(estateToDelete.id, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["estates"] });
-        setToast({
-          message: "Estate deleted",
-          type: "success",
-          isVisible: true,
-        });
+
+        toast.success("Estate deleted");
         setIsDeleteOpen(false);
         setEstateToDelete(null);
       },
       onError: () => {
-        setToast({
-          message: "Failed to delete estate",
-          type: "error",
-          isVisible: true,
-        });
+        toast.error("Failed to delete estate");
       },
     });
   };
 
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-    isVisible: boolean;
-  }>({
-    message: "",
-    type: "success",
-    isVisible: false,
-  });
   const [createdEstate, setCreatedEstate] =
     useState<CreateEstatePayload | null>(null);
 
@@ -77,28 +60,15 @@ const Estate: React.FC = () => {
     estatesData?.filter((estate: Estates) => estate.status === null).length ||
     0;
 
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, isVisible: false }));
-  };
-
- 
   const handleSubmit = (estate: CreateEstate) => {
     createEstate(estate, {
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: ["estates"] });
         setCreatedEstate(data);
-        setToast({
-          message: `${estate.name} created successfully!`,
-          type: "success",
-          isVisible: true,
-        });
+        toast.success(`${estate.name} created successfully!`);
       },
       onError: () => {
-        setToast({
-          message: `Failed to create estate`,
-          type: "error",
-          isVisible: true,
-        });
+        toast.error(`Failed to create estate`);
       },
     });
   };
@@ -214,12 +184,7 @@ const Estate: React.FC = () => {
           estate={createdEstate}
         />
       )}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={handleCloseToast}
-      />
+
       {selectedEstateId && (
         <EstateDetails
           isOpen={!!selectedEstateId}

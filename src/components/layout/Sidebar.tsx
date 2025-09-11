@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { type SVGProps } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -48,36 +49,31 @@ const menuItems: MenuItem[] = [
     icon: Building,
     roles: ["super admin", "estate admin", "admin", "landlord"],
   },
-  {
-    id: "tenants",
-    name: "Tenants",
-    icon: User2,
-    roles: ["landlord","estate admin"],
-  },
+  // {
+  //   id: "tenants",
+  //   name: "Tenants",
+  //   icon: User2,
+  //   roles: ["landlord","estate admin"],
+  // },
   {
     id: "charges",
     name: "Charges",
     icon: CreditCard,
-    roles: ["super admin", "estate admin", "admin"],
+    roles: ["super admin", "estate admin", "admin", "landlord", "tenant"],
   },
-  {
-    id: "payments",
-    name: "Payments",
-    icon: CreditCard,
-    roles: ["tenant"],
-  },
-  {
-    id: "defaulters",
-    name: "Defaulters",
-    icon: AlertTriangle,
-    roles: ["super admin", "estate admin", "admin"],
-  },
-  {
-    id: "reports",
-    name: "Reports",
-    icon: BarChart3,
-    roles: ["super admin", "estate admin", "admin"],
-  },
+
+  // {
+  //   id: "defaulters",
+  //   name: "Defaulters",
+  //   icon: AlertTriangle,
+  //   roles: ["super admin", "estate admin", "admin"],
+  // },
+  // {
+  //   id: "reports",
+  //   name: "Reports",
+  //   icon: BarChart3,
+  //   roles: ["super admin", "estate admin", "admin"],
+  // },
   {
     id: "notifications",
     name: "Notifications",
@@ -85,11 +81,17 @@ const menuItems: MenuItem[] = [
     roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
   },
   {
-    id: "roles",
-    name: "Roles & Permissions",
-    icon: Shield,
-    roles: ["super admin"],
+    id: "payments",
+    name: "Payments",
+    icon: CreditCard,
+    roles: ["tenant"],
   },
+  // {
+  //   id: "roles",
+  //   name: "Roles & Permissions",
+  //   icon: Shield,
+  //   roles: ["super admin"],
+  // },
   {
     id: "settings",
     name: "Settings",

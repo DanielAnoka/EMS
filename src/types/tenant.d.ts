@@ -1,4 +1,20 @@
-export type TenantStatus = "active" | "inactive" | "pending" | "suspended";
+export interface TenantStatus {
+  status: string;
+  tenant: {
+    user_id: number;
+    estate_id: number;
+    estate_property_id: number;
+    created_at: string;
+    created_by: number;
+    updated_at: string;
+  };
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    password: string;
+  };
+}
 
 export interface Tenant {
   id: number;
@@ -9,5 +25,7 @@ export interface Tenant {
   user_id: number;
   estate_id: number;
   estate_property_id: number;
-  status: TenantStatus;
+  status: 0 | 1;
 }
+
+export type CreateTenantPayload = Omit<Tenant, "id">;

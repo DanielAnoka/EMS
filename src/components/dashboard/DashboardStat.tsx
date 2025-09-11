@@ -5,14 +5,17 @@ import {
   Building,
   CreditCard,
   Home,
-  AlertTriangle,
+  // AlertTriangle,
   CheckCircle,
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useGetStatistics, useGetEstateStatistics } from "../../services/auth";
+import {
+  useGetStatistics,
+  useGetEstateStatistics,
+  useGetTenantStatistics,
+} from "../../services/auth";
 import { Skeleton } from "../ui/skeleton";
-
 
 const DashboardStat: React.FC = () => {
   const { user, role } = useAuth();
@@ -21,10 +24,15 @@ const DashboardStat: React.FC = () => {
   // Only fetch what this role cares about
   const enableStatistics = userRole === "super admin" || userRole === "admin";
   const enableEstateStats = userRole === "estate admin";
-
+  const enableTenantStats = userRole === "tenant";
 
   const { data: statistics, isLoading: isStatisticsLoading } = useGetStatistics(
     { enabled: enableStatistics }
+  );
+
+  const { data: tenantStatistic } = useGetTenantStatistics(
+    user?.user?.id ?? 0,
+    { enabled: enableTenantStats }
   );
 
   const { data: estateStatistics, isLoading: isEstateStatsLoading } =
@@ -32,8 +40,7 @@ const DashboardStat: React.FC = () => {
       enabled: enableEstateStats,
     });
 
-
-  const isLoading = isStatisticsLoading || isEstateStatsLoading ;
+  const isLoading = isStatisticsLoading || isEstateStatsLoading;
 
   const userCount = statistics?.total_users ?? 0;
   const estateCount = statistics?.total_estates ?? 0;
@@ -44,6 +51,10 @@ const DashboardStat: React.FC = () => {
   const estatePayments = estateStatistics?.payments_received ?? 0;
   const estateProperties = estateStatistics?.total_properties ?? 0;
   const estateTenants = estateStatistics?.total_tenants ?? 0;
+
+  const tenantPayments = tenantStatistic?.total_payments ?? 0;
+  const tenantAmountPaid = tenantStatistic?.total_amount_paid ?? 0;
+  // const tenantOutstandingCharges = tenantStatistic?.outstanding_charges ?? [];
 
 
   // const totalProperties  = propertyStatistics?.
@@ -183,37 +194,45 @@ const DashboardStat: React.FC = () => {
       case "tenant":
         return [
           {
-            title: "Current Rent",
-            value: "₦25K",
+            title: "Total amount paid",
+            value: tenantAmountPaid,
             icon: Home,
-            trend: "Paid this month",
-            trendDirection: "up" as const,
-            color: "green" as const,
+            trend: tenantAmountPaid
+              ? `₦${tenantAmountPaid} paid so far`
+              : "No payments yet",
+            trendDirection: tenantAmountPaid
+              ? ("up" as const)
+              : ("down" as const),
+            color: tenantAmountPaid ? ("green" as const) : ("red" as const),
           },
           {
-            title: "Service Charges",
-            value: "₦12K",
+            title: "Total payments",
+            value: tenantPayments,
             icon: CreditCard,
-            trend: "Due in 10 days",
-            trendDirection: "down" as const,
-            color: "yellow" as const,
+            trend: tenantPayments
+              ? `+${tenantPayments} payment${tenantPayments > 1 ? "s" : ""}`
+              : "No payments yet",
+            trendDirection: tenantPayments
+              ? ("up" as const)
+              : ("down" as const),
+            color: tenantPayments ? ("yellow" as const) : ("blue" as const),
           },
-          {
-            title: "Payment History",
-            value: "100%",
-            icon: CheckCircle,
-            trend: "Always on time",
-            trendDirection: "up" as const,
-            color: "blue" as const,
-          },
-          {
-            title: "Outstanding",
-            value: "₦0",
-            icon: AlertTriangle,
-            trend: "All cleared",
-            trendDirection: "up" as const,
-            color: "green" as const,
-          },
+          // {
+          //   title: "Payment History",
+          //   value: "100%",
+          //   icon: CheckCircle,
+          //   trend: "Always on time",
+          //   trendDirection: "up" as const,
+          //   color: "blue" as const,
+          // },
+          // {
+          //   title: "Outstanding",
+          //   value: "₦0",
+          //   icon: AlertTriangle,
+          //   trend: "All cleared",
+          //   trendDirection: "up" as const,
+          //   color: "green" as const,
+          // },
         ];
       case "landlord":
         return [

@@ -68,14 +68,14 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  // useEffect(() => {
+  //   if (!isOpen) return;
+  //   const onKey = (e: KeyboardEvent) => {
+  //     if (e.key === "Escape") onClose();
+  //   };
+  //   window.addEventListener("keydown", onKey);
+  //   return () => window.removeEventListener("keydown", onKey);
+  // }, [isOpen, onClose]);
 
   const handleChange = <K extends keyof typeof form>(
     key: K,

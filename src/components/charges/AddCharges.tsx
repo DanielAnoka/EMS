@@ -1,4 +1,3 @@
-
 import { Plus, X } from "lucide-react";
 import {
   DURATION_MAP,
@@ -19,7 +18,7 @@ interface AddChargesProps {
 
 type FormState = {
   name: string;
-  amount: string;           
+  amount: string;
   durationType: "" | DurationType;
   property_type_id: number | string;
   status: 0 | 1;
@@ -28,7 +27,6 @@ type FormState = {
 const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
   const { user, role } = useAuth();
 
-  // Normalize roles to lower-case array
   const roles = useMemo<string[]>(() => {
     if (!role) return [];
     return Array.isArray(role)
@@ -36,11 +34,11 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
       : [String(role).toLowerCase()];
   }, [role]);
 
-  const isSuperOrAdmin = roles.includes("super admin") || roles.includes("admin");
-  const isEstateAdmin  = roles.includes("estate admin");
+  const isEstateAdmin = roles.includes("estate admin");
 
-  const currentUserId   = Number(user?.user?.id ?? 0);
-  const currentEstateId = Number(user?.user?.user_estate?.id ?? 0);
+  // Keep IDs undefined if missing (don’t coerce to 0 here)
+  const currentUserId = user?.user?.id as number | undefined;
+  const currentEstateId = user?.user?.user_estate?.id ;
 
   const [form, setForm] = useState<FormState>({
     name: "",
@@ -64,38 +62,35 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
     if (!form.amount.trim() || !Number.isFinite(toNum(form.amount)))
       newErrors.amount = "Enter a valid amount";
     if (!form.durationType) newErrors.durationType = "Select a duration";
+    if (!currentUserId) newErrors.user_id = "Your user account is missing an ID.";
 
-   
-    const estateIdForCreate: number | null = isEstateAdmin
-      ? (currentEstateId || null)
-      : isSuperOrAdmin
-      ? null
-      : null;
-
-    // Validate: estate admin must have an estate
-    if (isEstateAdmin && !estateIdForCreate) {
+    // Estate Admin must have an estate
+    if (isEstateAdmin && !currentEstateId) {
       newErrors.estate_id = "No estate is linked to your account.";
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setTimeout(() => setErrors({}), 1200);
       return;
     }
+
+ 
+    const estateIdForCreate: number =
+      isEstateAdmin ? (currentEstateId as number) : 0;
 
     const payload: CreateChargePayload = {
       name: form.name.trim(),
       amount: toNum(form.amount),
       duration: DURATION_MAP[form.durationType as DurationType],
-      estate_id: estateIdForCreate,                   
-      property_type_id: toNum(form.property_type_id), 
+      estate_id: estateIdForCreate,                 // ← now 0 for admin/super, estate id for estate admin
+      property_type_id: toNum(form.property_type_id),
       status: form.status,
-      user_id: currentUserId,
+      user_id: currentUserId as number,
     };
 
+    // console.log("CreateChargePayload →", payload);
     onAdd(payload);
 
-    
     setForm({
       name: "",
       amount: "",
@@ -120,14 +115,12 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
         }`}
         onClick={onClose}
       />
-
       <div
         className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex h-full flex-col">
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Add New Charge</h2>
             <button
@@ -139,7 +132,6 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
             </button>
           </div>
 
-          {/* Form */}
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <div className="space-y-4">
               <InputField
@@ -180,10 +172,12 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
               {errors.estate_id && (
                 <p className="text-sm text-red-600">{errors.estate_id}</p>
               )}
+              {errors.user_id && (
+                <p className="text-sm text-red-600">{errors.user_id}</p>
+              )}
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
             <button
               type="button"
@@ -196,7 +190,7 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
               type="button"
               onClick={handleSubmit}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
-              disabled={isEstateAdmin && !currentEstateId} // prevent submit if estate admin without estate
+              disabled={isEstateAdmin && !currentEstateId}
               title={isEstateAdmin && !currentEstateId ? "No active estate" : undefined}
             >
               <Plus className="w-4 h-4" />

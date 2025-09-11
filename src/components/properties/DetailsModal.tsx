@@ -1,15 +1,21 @@
 import {
   Building,
   Mail,
-
   User,
   Users,
   CalendarDays,
   X,
+  Plus,
 } from "lucide-react";
 import { useState } from "react";
 import { useGetPropertyById } from "../../services/property";
 import Card from "../ui/card";
+import AddTenanttoProprety from "./AddTenanttoProprety";
+import { useCreateTenant } from "../../services/tenant";
+import type { CreateTenantPayload, TenantStatus } from "../../types/tenant";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import TenantLogin from "./tenantlogin";
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -18,14 +24,34 @@ interface DetailsModalProps {
 }
 
 const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
+  const queryClient = useQueryClient();
   const { data: property, isLoading, error } = useGetPropertyById(propertyId);
+
   const [activeTab, setActiveTab] = useState<"overview" | "tenants">(
     "overview"
   );
+  const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState(false);
+  const [createdEstate, setCreatedEstate] = useState<TenantStatus | null>(null);
+  const { mutate: createTenant } = useCreateTenant();
+
+  const handleSubmit = (tenant: CreateTenantPayload) => {
+    createTenant(tenant, {
+      onSuccess: (data) => {
+        setCreatedEstate(data);
+        queryClient.invalidateQueries({ queryKey: ["property", propertyId] });
+        queryClient.invalidateQueries({ queryKey: ["tenants", propertyId] });
+
+        toast.success(`${tenant.name} added successfully!`);
+        setIsAddTenantModalOpen(false);
+      },
+      onError: () => {
+        toast.error("Failed to add tenant");
+      },
+    });
+  };
 
   if (!isOpen) return null;
 
-  
   const ngn = (n?: number | string) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -69,6 +95,7 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
       </span>
     );
   };
+  const tenants = Array.isArray(property?.tenant) ? property!.tenant : [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -109,9 +136,7 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() =>
-                    setActiveTab(tab.id as "overview" | "tenants")
-                  }
+                  onClick={() => setActiveTab(tab.id as "overview" | "tenants")}
                   className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-150 ${
                     isActive
                       ? "border-blue-500 text-blue-600"
@@ -120,9 +145,9 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
                 >
                   <Icon className="w-5 h-5 mr-2" />
                   {tab.name}
-                    {tab.id === "tenants" && (
+                  {tab.id === "tenants" && (
                     <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                     {property?.tenant_name ? 1 : 0}
+                      {tenants.length}
                     </span>
                   )}
                 </button>
@@ -172,13 +197,13 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
                   <div className="flex items-center">
                     <User className="w-5 h-5 text-gray-400 mr-3" />
                     <span className="mr-2 font-medium">Owner:</span>
-                    <span>{property?.landlord_name ?? "—"}</span>
+                    <span>{property?.landlord?.name ?? "—"}</span>
                   </div>
 
                   <div className="flex items-center">
                     <Mail className="w-5 h-5 text-gray-400 mr-3" />
                     <span className="mr-2 font-medium">Owner Email:</span>
-                    <span>{property?.landlord_email ?? "—"}</span>
+                    <span>{property?.landlord?.email ?? "—"}</span>
                   </div>
 
                   <div className="flex items-center">
@@ -186,17 +211,6 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
                     <span className="mr-2 font-medium">Created:</span>
                     <span>{createdAt ?? "—"}</span>
                   </div>
-
-                  {property?.description && (
-                    <div className="mt-2">
-                      <div className="text-sm font-medium text-gray-600 mb-1">
-                        Description
-                      </div>
-                      <p className="text-gray-700 leading-relaxed">
-                        {property.description}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -204,62 +218,76 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
 
           {activeTab === "tenants" && (
             <div className="space-y-6">
-              {/* Landlord */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow duration-150">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Landlord
-                      </h4>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <User className="w-4 h-4 mr-1" />
-                          {property?.landlord_name ?? "—"}
-                        </div>
-                        <div className="flex items-center mt-1 sm:mt-0">
-                          <Mail className="w-4 h-4 mr-1" />
-                          {property?.landlord_email ?? "—"}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Header with Add Button */}
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Estate Tenants
+                </h3>
+                <button
+                  onClick={() => setIsAddTenantModalOpen(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Tenant
+                </button>
               </div>
 
               {/* Tenant */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow duration-150">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Tenant</h4>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <User className="w-4 h-4 mr-1" />
-                          {property?.tenant_name ?? "—"}
-                        </div>
-                        <div className="flex items-center mt-1 sm:mt-0">
-                          <Mail className="w-4 h-4 mr-1" />
-                          {property?.tenant_email ?? "—"}
-                        </div>
-                    
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {tenants.length > 0 ? (
+  <div className="space-y-3">
+    {tenants.map((t) => (
+      <div
+        key={t.id}
+        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow duration-150"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <Users className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-900">Tenant</h4>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600">
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-1" />
+                {t.name ?? "—"}
               </div>
+              <div className="flex items-center mt-1 sm:mt-0">
+                <Mail className="w-4 h-4 mr-1" />
+                {t.email ?? "—"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="text-center py-12">
+    <div className="text-gray-400 text-6xl mb-4">👥</div>
+    <h3 className="text-lg font-medium text-gray-900 mb-2">No tenants found</h3>
+    <p className="text-gray-600">Add tenants to this Property to get started</p>
+  </div>
+)}
 
-          
             </div>
           )}
         </div>
       </div>
+      {isAddTenantModalOpen && property && (
+        <AddTenanttoProprety
+          isOpen={isAddTenantModalOpen}
+          onClose={() => setIsAddTenantModalOpen(false)}
+          property={property}
+          onAdd={handleSubmit}
+        />
+      )}
+      {createdEstate && (
+        <TenantLogin
+          isOpen={!!createdEstate}
+          onClose={() => setCreatedEstate(null)}
+          property={createdEstate}
+        />
+      )}
     </div>
   );
 };

@@ -1,12 +1,12 @@
 import { useMutation, useQuery} from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
-import type { Tenant } from "../types/tenant";
+import type { CreateTenantPayload, TenantStatus } from "../types/tenant";
 
 export const useCreateTenant = () => {
   return useMutation({
-    mutationFn: async (newTenant: Tenant) => {
-      const response = await axiosInstance.post("/tenant/save", newTenant);
-      return response.data;
+    mutationFn: async (newTenant: CreateTenantPayload) => {
+      const response = await axiosInstance.post<TenantStatus>("/tenant/save", newTenant);
+      return response.data; 
     },
   });
 };

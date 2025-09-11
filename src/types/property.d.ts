@@ -78,8 +78,14 @@ export interface Property {
   location: string | null;
   created_at: string;
   updated_at: string;
-  landlord_name: string ;
-  landlord_email: string;
-  tenant_name: string;
-  tenant_email: string;
+  tenant: {
+    name: string;
+    email: string;
+    phone_number:string
+  };
+  landlord: {
+    name: string;
+    email: string;
+    phone_number: string;
+  };
 }

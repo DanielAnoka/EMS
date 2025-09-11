@@ -148,9 +148,41 @@ export const useGetEstateStatistics = (
       );
       return data;
     },
-    enabled: !!estateId, // don’t run unless estateId is provided
-    staleTime: 60_000, // 1 minute
-    gcTime: 5 * 60_000, // 5 minutes
+    enabled: !!estateId, 
+    staleTime: 60_000, 
+    gcTime: 5 * 60_000, 
     retry: 1,
     ...opts,
   });
+
+
+export interface TenantStatistics {
+  outstanding_charges: any[];  
+  total_amount_paid: number;
+  total_payments: number;
+}
+
+type TenantStatisticsQueryOpts = Partial<
+  UseQueryOptions<TenantStatistics, Error>
+>;
+
+export const useGetTenantStatistics = (
+  tenantId: number,
+  opts?: TenantStatisticsQueryOpts
+) =>
+  useQuery<TenantStatistics, Error>({
+    queryKey: ["tenant-statistics", tenantId],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<TenantStatistics>(
+        `/tenant/statistics/${tenantId}`
+      );
+      return data;
+    },
+    enabled: !!tenantId, 
+    staleTime: 60_000,  
+    gcTime: 5 * 60_000, 
+    retry: 1,
+    ...opts,
+  });
+
+

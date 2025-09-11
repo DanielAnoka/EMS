@@ -9,20 +9,20 @@ interface ModalProps {
 }
 
 const LoginDetails: React.FC<ModalProps> = ({ isOpen, onClose, property }) => {
-  const [copied] = useState(false);
+   const [copied, setCopied] = useState(false);
 
-  // const copyCredentials = async () => {
-  //   try {
-  //     const credentials = `Email: ${estate.user.email}\nPassword: ${
-  //       estate.user.password || "********"
-  //     }`;
-  //     await navigator.clipboard.writeText(credentials);
-  //     setCopied(true);
-  //     setTimeout(() => setCopied(false), 2000);
-  //   } catch (err) {
-  //     console.error("Failed to copy credentials:", err);
-  //   }
-  // };
+  const copyCredentials = async () => {
+    try {
+      const credentials = `Email: ${property?.landlord?.email}\nPassword: ${
+        property?.landlord?.password || "********"
+      }`;
+      await navigator.clipboard.writeText(credentials);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy credentials:", err);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -78,7 +78,7 @@ const LoginDetails: React.FC<ModalProps> = ({ isOpen, onClose, property }) => {
               </button>
 
               <button
-                // onClick={copyCredentials}
+             onClick={copyCredentials}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 flex items-center justify-center"
               >
                 {copied ? (
