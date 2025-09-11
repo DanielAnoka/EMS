@@ -26,9 +26,18 @@ const Charges = () => {
   const { data: charges = [], isLoading } = useGetCharges(
     { enabled: enableStatistics }
   );
-  // const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } = useGetChargesbyEstateId(user?.user?.user_estate?.id ?? 0,
-  //   { enabled: enableCharge }
-  // );
+
+  let estateId 
+  if(userRole === "estate admin") {
+    estateId = user?.user?.user_estate?.id ?? 0;
+  }
+  if(userRole === "tenant"){
+    estateId = user?.tenants[0]?.estate?.id ?? 0;
+  }
+
+  const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } = useGetChargesbyEstateId(estateId ?? 0,
+    { enabled: enableCharge }
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,18 +54,15 @@ const Charges = () => {
   const isEstateAdmin = roles.includes("estate admin");
 
 
-  const userEstateId = user?.user?.user_estate?.id;
+ 
 
   // ✅ Role-based visibility
   const visibleCharges: Charge[] = useMemo(() => {
     if (!userRole) return [];
     if (userRole === "super admin" || userRole === "admin") return charges;
-    if (userRole === "estate admin" || userRole === "landlord" || userRole === "tenant")
-      return charges.filter(
-        (c: { estate_id: number | undefined }) => c.estate_id === userEstateId
-      );
+    if (userRole === "estate admin" || userRole === "tenant" || userRole === "landlord") return chargesByEstateId;
     return [];
-  }, [userRole, charges, userEstateId]);
+  }, [userRole, charges, chargesByEstateId,]);
 
   const searchQ = norm(searchTerm);
   const filteredCharges: Charge[] = useMemo(() => {
@@ -145,7 +151,7 @@ const Charges = () => {
           </div>
         ) : (
           <div className="mt-6">
-            {isLoading ? (
+            {isLoading || isLoadingByEstateId ? (
               <TableSkeleton rows={8} showActions />
             ) : (
               <ChargesTable charges={filteredCharges} />

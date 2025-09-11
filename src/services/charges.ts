@@ -29,7 +29,7 @@ export const useGetChargesbyEstateId = (
     queryKey: ["charges:by-estate", estateId],
     queryFn: async () => {
       const { data } = await axiosInstance.get<Charge[]>(
-        `/charges/estate/${estateId}`
+        `/estate/charges/${estateId}`
       );
       return data;
     },

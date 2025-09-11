@@ -14,6 +14,7 @@ interface AddNotificationsProps {
 const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => {
   const { user, role } = useAuth();
 
+  // normalize roles from auth (string | string[])
   const roles = useMemo<string[]>(() => {
     if (!role) return [];
     return Array.isArray(role)
@@ -24,15 +25,17 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
   const isSuperOrAdmin = roles.includes("super admin") || roles.includes("admin");
   const isEstateAdmin = roles.includes("estate admin");
 
-  const currentEstateId = user?.user?.user_estate?.id;
+  const currentEstateId = user?.user?.user_estate?.id ?? null;
+  const currentUserId = user?.user?.id ?? 0; // created_by
 
   const [form, setForm] = useState({
     title: "",
     message: "",
     type: "" as "" | "email" | "whatsapp",
+    audience: "" as "" | "landlord" | "tenant" | "both", // -> roles
     estate_id: 0,
     url: "",
-      is_read: 0 as 0 | 1, 
+    is_read: 0 as 0 | 1,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -48,6 +51,11 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
     if (!form.title.trim()) newErrors.title = "Title is required";
     if (!form.message.trim()) newErrors.message = "Message is required";
     if (!form.type) newErrors.type = "Select a type";
+    if (!form.audience) newErrors.audience = "Select an audience";
+
+    if (!currentUserId) {
+      newErrors.created_by = "Cannot determine current user (created_by).";
+    }
 
     if (isEstateAdmin && !currentEstateId) {
       newErrors.estate_id = "No estate is linked to your account.";
@@ -58,12 +66,20 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
       return;
     }
 
-    // 🔹 Role-based estate_id
-    const estateIdToUse = isSuperOrAdmin
-      ? 0
+    // estate id resolution
+    const estateIdToUse: number | null = isSuperOrAdmin
+      ? null // backend can treat null/omitted as "all estates" or you can pass 0 if required
       : isEstateAdmin
-      ? currentEstateId!
-      : 0; 
+      ? Number(currentEstateId)
+      : null;
+
+    // map audience -> roles[]
+    const rolesToUse =
+      form.audience === "landlord"
+        ? ["landlord"]
+        : form.audience === "tenant"
+        ? ["tenant"]
+        : ["landlord", "tenant"]; // both
 
     const payload: CreateNotification = {
       title: form.title.trim(),
@@ -72,13 +88,24 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
       estate_id: estateIdToUse,
       url: form.url.trim(),
       is_read: form.is_read,
+      created_by: Number(currentUserId),
+      roles: rolesToUse as ("landlord" | "tenant")[],
     };
 
     onAdd(payload);
+    setForm({
+      title: "",
+      message: "",
+      type: "" as "" | "email" | "whatsapp",
+      audience: "" as "" | "landlord" | "tenant" | "both",
+      estate_id: 0,
+      url: "",
+      is_read: 0 as 0 | 1,
+    });
     onClose();
   };
 
-  // prevent body scroll
+  // prevent body scroll while open
   useEffect(() => {
     if (isOpen) {
       const original = document.body.style.overflow;
@@ -135,6 +162,7 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
             required
             error={errors.title}
           />
+
           <InputField
             id="message"
             label="Message"
@@ -146,6 +174,7 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
             as="textarea"
             error={errors.message}
           />
+
           <SelectField
             id="type"
             label="Type"
@@ -158,6 +187,22 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
             ]}
             error={errors.type}
           />
+
+          {/* Audience -> roles[] */}
+          <SelectField
+            id="audience"
+            label="Audience"
+            value={form.audience}
+            onChange={(v) => handleChange("audience", v as "landlord" | "tenant" | "both")}
+            placeholder="Select audience"
+            options={[
+              { label: "Landlord", value: "landlord" },
+              { label: "Tenant", value: "tenant" },
+              { label: "Both (Landlord & Tenant)", value: "both" },
+            ]}
+            error={errors.audience}
+          />
+
           <InputField
             id="url"
             label="URL (Optional)"
@@ -166,6 +211,16 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
             placeholder="e.g., /notification/1"
             error={errors.url}
           />
+
+          {/* Estate info note for visibility */}
+          {isEstateAdmin && currentEstateId && (
+            <p className="text-xs text-gray-500">
+              Notice: As an Estate Admin, this notification will be scoped to your estate
+               {/* (ID: {currentEstateId}). */}
+            </p>
+          )}
+          {errors.estate_id && <p className="text-sm text-red-600">{errors.estate_id}</p>}
+          {errors.created_by && <p className="text-sm text-red-600">{errors.created_by}</p>}
         </div>
 
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">

@@ -14,6 +14,7 @@ import PropertyManagement from "../components/properties/PropertyManagement";
 import Charges from "../components/charges/ChargeManagement";
 import TenantManagement from "../components/tenants/TenantManagement";
 import NotificationsManagement from "../components/notifications/NotificationsManagement";
+import Payment from "../components/payments/payment";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -64,6 +65,12 @@ export const routes: AppRoute[] = [
     element: MainLayout,
     protected: true,
     children: [{ index: true, element: NotificationsManagement, protected: true }],
+  },
+  {
+    path: "/payments",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: Payment, protected: true }],
   },
 ];
 

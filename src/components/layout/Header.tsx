@@ -1,21 +1,23 @@
 import React from "react";
-import { Bell, Menu, LogOut, User, Settings } from "lucide-react";
+import {  Menu, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
 import { storage } from "../../utils/storage";
-import { ROLE_LABELS } from "../../constants/roles";
+import NotificationBell from "../notifications/NotificationBell";
+
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
-  const { user } = useAuth();
+  const { user,role } = useAuth();
   const handleLogout = () => {
     storage.removeToken();
     localStorage.removeItem("user");
     window.location.reload();
   };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
       <div className="flex items-center justify-between h-16 px-4 lg:px-6">
@@ -34,10 +36,11 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
 
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg relative">
+          {/* <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          </button> */}
+            <NotificationBell />
 
           {/* User menu */}
           <div className="relative group">
@@ -47,10 +50,11 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
               </div>
               <div className="hidden sm:block text-left">
                 <div className="text-sm font-medium text-gray-900">
-                  {user?.name}
+                  {user?.user?.name?.toLocaleUpperCase()}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
-                  {user?.role?.map((r) => ROLE_LABELS[r]).join(", ")}
+                  {role?.toLocaleUpperCase()}
+
                 </div>
               </div>
             </button>

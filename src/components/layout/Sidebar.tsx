@@ -84,7 +84,7 @@ const menuItems: MenuItem[] = [
     id: "payments",
     name: "Payments",
     icon: CreditCard,
-    roles: ["tenant"],
+    roles: ["tenant", "landlord", "estate admin", "admin", "super admin"],
   },
   // {
   //   id: "roles",
@@ -174,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div>
                 <div className="text-sm font-semibold text-gray-900">
-                  {user?.user.name}
+                  {user?.user.name?.toLocaleUpperCase()}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
                   {role?.toLocaleUpperCase()}

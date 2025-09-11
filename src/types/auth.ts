@@ -63,9 +63,55 @@ type UserRes = {
   };
 };
 
+type TenantRes = {
+  id: number;
+  estate_id: number;
+  estate_property_id: number;
+  user_id: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: number;
+  estate: {
+    id: number;
+    lga_id: number;
+    name: string;
+    description: string | null;
+    owner: string;
+    address: string;
+    email: string;
+    phone_number: string;
+    status: 0 | 1;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    created_by: number;
+  };
+  estate_property: {
+    id: number;
+    estate_id: number;
+    user_id: number;
+    owner_id: number | null;
+    title: string;
+    description: string | null;
+    property_type_id: number;
+    location: string | null;
+    price: string;
+    bedrooms: number;
+    bathrooms: number;
+    toilets: number;
+    status: "available" | string;
+    features: unknown | null;
+    created_at: string;
+    updated_at: string;
+  };
+};
+
 export type CurrentUser = {
   id: number;
   permissions: string[];
   user: UserRes;
   roles: string[];
+  tenants: TenantRes[];
 };

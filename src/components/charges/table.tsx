@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getDurationLabel, type Charge } from "../../types/charges";
 import { formatNaira,formatDate } from "../../utils";
 
@@ -49,7 +50,7 @@ const ChargesTable = ({
             <th className="px-6 py-3">Name</th>
             <th className="px-6 py-3">Amount</th>
             <th className="px-6 py-3">Duration (mo)</th>
-            <th className="px-6 py-3">Created</th>
+            {/* <th className="px-6 py-3">Created</th> */}
             <th className="px-6 py-3">Status</th>
             
           </tr>
@@ -68,9 +69,9 @@ const ChargesTable = ({
 
               <td className="px-10 py-3 ">{getDurationLabel(charge.duration)}</td>
 
-              <td className="px-6 py-4 text-gray-500">
+              {/* <td className="px-6 py-4 text-gray-500">
                 {formatDate(charge.created_at)}
-              </td>
+              </td> */}
 
               <td className="px-6 py-3">{renderStatus(charge.status)}</td>
 

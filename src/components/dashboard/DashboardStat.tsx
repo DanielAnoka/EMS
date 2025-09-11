@@ -5,9 +5,7 @@ import {
   Building,
   CreditCard,
   Home,
-  // AlertTriangle,
   CheckCircle,
-  Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -62,6 +60,7 @@ const DashboardStat: React.FC = () => {
   const getStatsForRole = (role: string | null) => {
     switch (role) {
       case "super admin":
+      case "admin":
         return [
           {
             title: "Total Users",
@@ -115,41 +114,41 @@ const DashboardStat: React.FC = () => {
           },
         ];
 
-      case "admin":
-        return [
-          {
-            title: "Total Users",
-            value: "856",
-            icon: Users,
-            trend: "+8% from last month",
-            trendDirection: "up" as const,
-            color: "blue" as const,
-          },
-          {
-            title: "Managed Estates",
-            value: "12",
-            icon: Building,
-            trend: "+1 new estate",
-            trendDirection: "up" as const,
-            color: "green" as const,
-          },
-          {
-            title: "Monthly Revenue",
-            value: "₦1.2M",
-            icon: CreditCard,
-            trend: "+5% from last month",
-            trendDirection: "up" as const,
-            color: "purple" as const,
-          },
-          {
-            title: "Pending Approvals",
-            value: "15",
-            icon: Clock,
-            trend: "8 processed today",
-            trendDirection: "down" as const,
-            color: "yellow" as const,
-          },
-        ];
+      // case "admin":
+      //   return [
+      //     {
+      //       title: "Total Users",
+      //       value: "856",
+      //       icon: Users,
+      //       trend: "+8% from last month",
+      //       trendDirection: "up" as const,
+      //       color: "blue" as const,
+      //     },
+      //     {
+      //       title: "Managed Estates",
+      //       value: "12",
+      //       icon: Building,
+      //       trend: "+1 new estate",
+      //       trendDirection: "up" as const,
+      //       color: "green" as const,
+      //     },
+      //     {
+      //       title: "Monthly Revenue",
+      //       value: "₦1.2M",
+      //       icon: CreditCard,
+      //       trend: "+5% from last month",
+      //       trendDirection: "up" as const,
+      //       color: "purple" as const,
+      //     },
+      //     {
+      //       title: "Pending Approvals",
+      //       value: "15",
+      //       icon: Clock,
+      //       trend: "8 processed today",
+      //       trendDirection: "down" as const,
+      //       color: "yellow" as const,
+      //     },
+      //   ];
 
       case "estate admin":
         return [
