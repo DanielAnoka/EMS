@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
+import type { CreatePaymentPayload } from "../types/payment";
 
 export type Payment = {
   id: number;
@@ -104,3 +105,12 @@ export const useGetTenantPayments = (
     ...DEFAULTS,
     ...opts,
   });
+
+export const useCreatePayment = () => {
+  return useMutation({
+    mutationFn: async (payload: CreatePaymentPayload) => {
+      const response = await axiosInstance.post("/make/payment", payload);
+      return response.data;
+    },
+  });
+};

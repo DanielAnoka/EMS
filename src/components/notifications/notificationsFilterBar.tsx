@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { Notification } from "../../types/notifications";
 
 export type NotificationFilters = {

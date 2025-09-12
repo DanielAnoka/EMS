@@ -1,5 +1,9 @@
 import { CreditCard, Plus } from "lucide-react";
-import { useGetCharges, useCreateCharge,useGetChargesbyEstateId } from "../../services/charges";
+import {
+  useGetCharges,
+  useCreateCharge,
+  useGetChargesbyEstateId,
+} from "../../services/charges";
 import Card from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import SearchBar from "../ui/search";
@@ -13,56 +17,68 @@ import AddCharges from "./AddCharges";
 import { norm } from "../../utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useCreatePayment } from "../../services/payments";
+import PayCharges from "./PayCharges";
 
 const Charges = () => {
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
-   const userRole = role ?? null;
+  const userRole = role ?? null;
 
-   const enableStatistics = userRole === "super admin" || userRole === "admin";
-   const enableCharge = userRole === "estate admin" || userRole === "tenant" || userRole === "landlord";
+  const enableStatistics = userRole === "super admin" || userRole === "admin";
+  const enableCharge =
+    userRole === "estate admin" ||
+    userRole === "tenant" ||
+    userRole === "landlord";
 
   const { mutate: createCharges } = useCreateCharge();
-  const { data: charges = [], isLoading } = useGetCharges(
-    { enabled: enableStatistics }
-  );
+  const { data: charges = [], isLoading } = useGetCharges({
+    enabled: enableStatistics,
+  });
 
-  let estateId 
-  if(userRole === "estate admin") {
+  let estateId;
+  if (userRole === "estate admin") {
     estateId = user?.user?.user_estate?.id ?? 0;
   }
-  if(userRole === "tenant"){
+  if (userRole === "tenant") {
     estateId = user?.tenants[0]?.estate?.id ?? 0;
   }
 
-  const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } = useGetChargesbyEstateId(estateId ?? 0,
-    { enabled: enableCharge }
-  );
+  const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } =
+    useGetChargesbyEstateId(estateId ?? 0, { enabled: enableCharge });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPayOpen, setIsPayOpen] = useState(false);
+  const [selectedCharge, setSelectedCharge] = useState<Charge | null>(null);
 
-  const roles = useMemo<string[]>(() => {
-    if (!role) return [];
-    return Array.isArray(role)
-      ? role.map((r) => String(r).toLowerCase())
-      : [String(role).toLowerCase()];
-  }, [role]);
+  const roles = useMemo<string[]>(
+    () =>
+      Array.isArray(role)
+        ? role.map((r) => String(r).toLowerCase())
+        : role
+        ? [String(role).toLowerCase()]
+        : [],
+    [role]
+  );
 
   const isSuperOrAdmin =
     roles.includes("super admin") || roles.includes("admin");
   const isEstateAdmin = roles.includes("estate admin");
-
-
- 
+   const isTenant = roles.includes("tenant");
 
   // ✅ Role-based visibility
   const visibleCharges: Charge[] = useMemo(() => {
     if (!userRole) return [];
     if (userRole === "super admin" || userRole === "admin") return charges;
-    if (userRole === "estate admin" || userRole === "tenant" || userRole === "landlord") return chargesByEstateId;
+    if (
+      userRole === "estate admin" ||
+      userRole === "tenant" ||
+      userRole === "landlord"
+    )
+      return chargesByEstateId;
     return [];
-  }, [userRole, charges, chargesByEstateId,]);
+  }, [userRole, charges, chargesByEstateId]);
 
   const searchQ = norm(searchTerm);
   const filteredCharges: Charge[] = useMemo(() => {
@@ -78,7 +94,20 @@ const Charges = () => {
   const handleSubmit = (payload: CreateChargePayload) => {
     createCharges(payload, {
       onSuccess: (created) => {
+        const eid =
+          user?.tenants?.at(0)?.estate?.id ?? user?.user?.user_estate?.id ?? 0;
+
+        if (eid) {
+          queryClient.setQueryData<Charge[]>(
+            ["charges:by-estate", eid],
+            (prev = []) => [created, ...prev]
+          );
+          queryClient.invalidateQueries({
+            queryKey: ["charges:by-estate", eid],
+          });
+        }
         queryClient.invalidateQueries({ queryKey: ["charges"] });
+
         toast.success(`${created.name} created successfully!`);
         setIsAddModalOpen(false);
       },
@@ -88,10 +117,39 @@ const Charges = () => {
       },
     });
   };
+
+  const { mutate: createPayment,  } = useCreatePayment();
+
+  const openPayModal = (charge: Charge) => {
+    setSelectedCharge(charge);
+    setIsPayOpen(true);
+  };
+
+  const handlePaySubmit = (payload: {
+    phone_number: string;
+    charge_id: number;
+    estate_property_id: number;
+    tenant_id: number;
+    amount: number;
+    estate_id:number;
+  }) => {
+    createPayment(payload, {
+      onSuccess: () => {
+        toast.success("Payment initialized successfully.");
+        setIsPayOpen(false);
+        setSelectedCharge(null);
+        // If your payments affect any list, invalidate here
+        // queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
+      },
+      onError: (err: unknown) => {
+        console.error(err);
+        toast.error("Failed to initialize payment.");
+      },
+    });
+  };
   const isBusy =
-  isLoading ||               // global/all charges
-  isLoadingByEstateId   // estate-scoped fetch
- 
+    isLoading || // global/all charges
+    isLoadingByEstateId; // estate-scoped fetch
 
   return (
     <>
@@ -143,7 +201,7 @@ const Charges = () => {
         />
 
         {/* empty state OR table */}
-        {!isBusy  && filteredCharges.length === 0 ? (
+        {!isBusy && filteredCharges.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🏠</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -158,7 +216,11 @@ const Charges = () => {
             {isLoading || isLoadingByEstateId ? (
               <TableSkeleton rows={8} showActions />
             ) : (
-              <ChargesTable charges={filteredCharges} />
+              <ChargesTable
+                charges={filteredCharges}
+                canPay={isTenant}
+                onPay={openPayModal}
+              />
             )}
           </div>
         )}
@@ -169,6 +231,12 @@ const Charges = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleSubmit}
+      />
+      <PayCharges
+        isOpen={isPayOpen}
+        onClose={() => setIsPayOpen(false)}
+        onAdd={handlePaySubmit}
+        charge={selectedCharge}
       />
     </>
   );

@@ -35,10 +35,11 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
   const { mutate: createTenant } = useCreateTenant();
 
   const handleSubmit = (tenant: CreateTenantPayload) => {
+    const key = ["properties", propertyId] as const;
     createTenant(tenant, {
       onSuccess: (data) => {
         setCreatedEstate(data);
-        queryClient.invalidateQueries({ queryKey: ["property", propertyId] });
+        queryClient.invalidateQueries({ queryKey: key });
         queryClient.invalidateQueries({ queryKey: ["tenants", propertyId] });
 
         toast.success(`${tenant.name} added successfully!`);
@@ -233,42 +234,45 @@ const DetailsModal = ({ isOpen, onClose, propertyId }: DetailsModalProps) => {
               </div>
 
               {/* Tenant */}
-            {tenants.length > 0 ? (
-  <div className="space-y-3">
-    {tenants.map((t) => (
-      <div
-        key={t.id}
-        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow duration-150"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <Users className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">Tenant</h4>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <User className="w-4 h-4 mr-1" />
-                {t.name ?? "—"}
-              </div>
-              <div className="flex items-center mt-1 sm:mt-0">
-                <Mail className="w-4 h-4 mr-1" />
-                {t.email ?? "—"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-12">
-    <div className="text-gray-400 text-6xl mb-4">👥</div>
-    <h3 className="text-lg font-medium text-gray-900 mb-2">No tenants found</h3>
-    <p className="text-gray-600">Add tenants to this Property to get started</p>
-  </div>
-)}
-
+              {tenants.length > 0 ? (
+                <div className="space-y-3">
+                  {tenants.map((t) => (
+                    <div
+                      key={t.id}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow duration-150"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <Users className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">Tenant</h4>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-600">
+                            <div className="flex items-center">
+                              <User className="w-4 h-4 mr-1" />
+                              {t.name ?? "—"}
+                            </div>
+                            <div className="flex items-center mt-1 sm:mt-0">
+                              <Mail className="w-4 h-4 mr-1" />
+                              {t.email ?? "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">👥</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No tenants found
+                  </h3>
+                  <p className="text-gray-600">
+                    Add tenants to this Property to get started
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -11,6 +11,7 @@ const PaymentManagement = () => {
   const userRole = role ?? null;
   const estateId = user?.user?.user_estate?.id ?? 0;
   const tenantId = user?.tenants[0]?.estate?.id ?? 0;
+  console.log("tenantId", tenantId);
 
   const enablePayments = userRole === "super admin" || userRole === "admin";
   const enableEstatePayments = userRole === "estate admin";
