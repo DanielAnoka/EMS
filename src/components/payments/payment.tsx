@@ -2,7 +2,11 @@ import { CreditCard, Download } from "lucide-react";
 import SearchBar from "../ui/search";
 import { useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useGetAllPayments,useGetEstatePayments,useGetTenantPayments } from "../../services/payments";
+import {
+  useGetAllPayments,
+  useGetEstatePayments,
+  useGetTenantPayments,
+} from "../../services/payments";
 import Card from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
@@ -17,7 +21,6 @@ const PaymentManagement = () => {
   const enableEstatePayments = userRole === "estate admin";
   const enableTenantPayments = userRole === "tenant";
 
-
   const { data: payments, isLoading } = useGetAllPayments({
     enabled: enablePayments,
   });
@@ -26,7 +29,7 @@ const PaymentManagement = () => {
       enabled: enableEstatePayments,
     });
 
-    const { data: tenantPayments, isLoading: isLoadingTenantPayments } =
+  const { data: tenantPayments, isLoading: isLoadingTenantPayments } =
     useGetTenantPayments(tenantId, {
       enabled: enableTenantPayments,
     });
@@ -40,8 +43,8 @@ const PaymentManagement = () => {
 
   const isSuperOrAdmin =
     roles.includes("super admin") || roles.includes("admin");
-    const isEstateAdmin = roles.includes("estate admin");
-    const isTenantAdmin = roles.includes("tenant");
+  const isEstateAdmin = roles.includes("estate admin");
+  const isTenantAdmin = roles.includes("tenant");
 
   const [searchTerm, setSearchTerm] = useState("");
   return (
