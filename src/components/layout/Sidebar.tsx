@@ -1,5 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { type SVGProps } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {
+  type SVGProps,
+  useMemo,
+  useState,
+  useEffect,
+  Fragment,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
@@ -7,12 +13,15 @@ import {
   Building,
   CreditCard,
   Settings,
-  Shield,
   UserCog,
-  BarChart3,
   Bell,
-  AlertTriangle,
-  User2,
+  LayoutDashboard,
+  Briefcase,
+  Wallet,
+  Cog,
+  ChevronDown,
+  ChevronRight,
+  ListPlus,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import type { Role } from "../../services/auth";
@@ -22,88 +31,151 @@ interface MenuItem {
   name: string;
   icon: React.ComponentType<SVGProps<SVGSVGElement>>;
   roles: Role[];
+  to?: string; // optional custom path override
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: "dashboard",
-    name: "Dashboard",
-    icon: Home,
-    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
-  },
-  {
-    id: "users",
-    name: "User Management",
-    icon: Users,
-    roles: ["super admin", "admin"],
-  },
-  {
-    id: "estates",
-    name: "Estate Management",
-    icon: Building,
-    roles: ["super admin", "admin"],
-  },
-  {
-    id: "properties",
-    name: "Properties",
-    icon: Building,
-    roles: ["super admin", "estate admin", "admin", "landlord"],
-  },
-  // {
-  //   id: "tenants",
-  //   name: "Tenants",
-  //   icon: User2,
-  //   roles: ["landlord","estate admin"],
-  // },
-  {
-    id: "charges",
-    name: "Charges",
-    icon: CreditCard,
-    roles: ["super admin", "estate admin", "admin", "landlord", "tenant"],
-  },
-
-  // {
-  //   id: "defaulters",
-  //   name: "Defaulters",
-  //   icon: AlertTriangle,
-  //   roles: ["super admin", "estate admin", "admin"],
-  // },
-  // {
-  //   id: "reports",
-  //   name: "Reports",
-  //   icon: BarChart3,
-  //   roles: ["super admin", "estate admin", "admin"],
-  // },
-  {
-    id: "notifications",
-    name: "Notifications",
-    icon: Bell,
-    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
-  },
-  {
-    id: "payments",
-    name: "Payments",
-    icon: CreditCard,
-    roles: ["tenant", "landlord", "estate admin", "admin", "super admin"],
-  },
-  // {
-  //   id: "roles",
-  //   name: "Roles & Permissions",
-  //   icon: Shield,
-  //   roles: ["super admin"],
-  // },
-  {
-    id: "settings",
-    name: "Settings",
-    icon: Settings,
-    roles: ["super admin", "estate admin"],
-  },
-];
+interface MenuSection {
+  id: string;
+  label: string;
+  icon: React.ComponentType<SVGProps<SVGSVGElement>>;
+  items: MenuItem[];
+}
 
 interface SidebarProps {
   isMobileMenuOpen: boolean;
   onMobileMenuClose: () => void;
 }
+
+/** ====== Items (single source of truth) ====== */
+const ITEMS: Record<string, MenuItem> = {
+  dashboard: {
+    id: "dashboard",
+    name: "Dashboard",
+    icon: Home,
+    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
+    to: "/dashboard",
+  },
+  users: {
+    id: "users",
+    name: "User Management",
+    icon: Users,
+    roles: ["super admin", "admin"],
+  },
+  estates: {
+    id: "estates",
+    name: "Estate Management",
+    icon: Building,
+    roles: ["super admin", "admin"],
+  },
+  properties: {
+    id: "properties",
+    name: "Properties",
+    icon: Building,
+    roles: ["super admin", "estate admin", "admin", "landlord"],
+  },
+  charges: {
+    id: "charges",
+    name: "Charges",
+    icon: CreditCard,
+    roles: ["super admin", "estate admin", "admin", "landlord", "tenant"],
+  },
+  payments: {
+    id: "payments",
+    name: "Payments",
+    icon: CreditCard,
+    roles: ["tenant", "landlord", "estate admin", "admin", "super admin"],
+  },
+  notifications: {
+    id: "notifications",
+    name: "Notifications",
+    icon: Bell,
+    roles: ["super admin", "estate admin", "tenant", "admin", "landlord"],
+  },
+  settings: {
+    id: "settings",
+    name: "Settings",
+    icon: Settings,
+    roles: ["super admin", "estate admin"],
+  },
+  attributes: {
+    id: "attributes",
+    name: "Attributes",
+    icon: ListPlus,
+    roles: ["super admin"],
+  },
+  // Future ideas (kept for grouping, just uncomment when ready):
+  // defaulters: { id: "defaulters", name: "Defaulters", icon: AlertTriangle, roles: ["super admin", "estate admin", "admin"] },
+  // reports: { id: "reports", name: "Reports", icon: BarChart3, roles: ["super admin", "estate admin", "admin"] },
+  // roles: { id: "roles", name: "Roles & Permissions", icon: Shield, roles: ["super admin"] },
+};
+
+/** ====== Sections (logical groups) ======
+ * Add/remove here and the UI scales automatically.
+ */
+const SECTIONS: MenuSection[] = [
+  {
+    id: "overview",
+    label: "Overview",
+    icon: LayoutDashboard,
+    items: [ITEMS.dashboard],
+  },
+  {
+    id: "management",
+    label: "Management",
+    icon: Briefcase,
+    items: [ITEMS.users, ITEMS.estates, ITEMS.properties,ITEMS.attributes],
+  },
+  {
+    id: "finance",
+    label: "Finance",
+    icon: Wallet,
+    items: [ITEMS.charges, ITEMS.payments],
+  },
+  {
+    id: "communication",
+    label: "Communication",
+    icon: Bell,
+    items: [ITEMS.notifications],
+  },
+  {
+    id: "system",
+    label: "System",
+    icon: Cog,
+    items: [ITEMS.settings],
+  }
+];
+
+/** ====== Helpers ====== */
+const STORAGE_KEY = "sidebar.openSections";
+
+const usePersistedOpenSections = (initial: string[]) => {
+  const [open, setOpen] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as string[]) : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(open));
+    } catch {
+      // ignore persistence errors
+    }
+  }, [open]);
+
+  const toggle = (id: string) =>
+    setOpen((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+
+  const openAll = (ids: string[]) => setOpen(ids);
+  const closeAll = () => setOpen([]);
+
+  return { open, toggle, openAll, closeAll };
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isMobileMenuOpen,
@@ -113,32 +185,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const { user, role } = useAuth();
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => role && item.roles.includes(role as Role)
-  );
+  const canSee = (item: MenuItem) =>
+    !!role && item.roles.includes(role as Role);
 
-  const handleItemClick = (itemId: string) => {
-    if (itemId === "dashboard") {
-      navigate("/dashboard");
-    } else {
-      navigate(`/${itemId}`);
-    }
+  const visibleSections = useMemo(() => {
+    return SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.filter(canSee),
+    })).filter((section) => section.items.length > 0);
+  }, [role]);
+
+  const initialOpen = useMemo(() => visibleSections.map((s) => s.id), []);
+
+  const { open, toggle } = usePersistedOpenSections(initialOpen);
+
+  const activeId = useMemo(() => {
+    const path = location.pathname.replace(/\/+$/, "");
+    if (path === "" || path === "/") return "dashboard";
+    const seg = path.split("/")[1]; // "/dashboard" => "dashboard"
+    return seg || "dashboard";
+  }, [location.pathname]);
+
+  const go = (item: MenuItem) => {
+    const to = item.to ?? `/${item.id}`;
+    navigate(to);
     onMobileMenuClose();
   };
 
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path === "/dashboard" || path === "/dashboard/") {
-      return "dashboard";
-    }
-    const segments = path.split("/");
-    return segments[segments.length - 1] || "dashboard";
-  };
-
-  const activeTab = getActiveTab();
+  const isActiveItem = (itemId: string) => activeId === itemId;
+  const isSectionActive = (section: MenuSection) =>
+    section.items.some((i) => isActiveItem(i.id));
 
   return (
-    <>
+    <Fragment>
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
@@ -184,27 +263,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {filteredMenuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
+          <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-2">
+            {visibleSections.map((section) => {
+              const SectionIcon = section.icon;
+              const openSection = open.includes(section.id);
+              const active = isSectionActive(section);
 
               return (
-                <button
-                  key={item.id}
-                  onClick={() => handleItemClick(item.id)}
-                  className={`
-                    w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors duration-150
-                    ${
-                      isActive
-                        ? "bg-blue-100 text-blue-700 border-r-2 border-blue-600"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    }
-                  `}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </button>
+                <div key={section.id}>
+                  {/* Section header */}
+                  <button
+                    onClick={() => toggle(section.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg
+                      ${active ? "bg-blue-50" : "bg-white hover:bg-gray-50"}`}
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                      <SectionIcon className="w-4 h-4" />
+                      {section.label}
+                    </span>
+                    {openSection ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </button>
+
+                  {/* Items */}
+                  {openSection && (
+                    <div className="px-2 pb-2">
+                      {section.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        const activeItem = isActiveItem(item.id);
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => go(item)}
+                            className={`w-full mt-1 flex items-center px-3 py-2 text-sm rounded-md transition-colors
+                              ${
+                                activeItem
+                                  ? "bg-blue-100 text-blue-700 border-r-2 border-blue-600"
+                                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                              }`}
+                          >
+                            <ItemIcon className="w-4 h-4 mr-2" />
+                            {item.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -217,6 +325,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </Fragment>
   );
 };

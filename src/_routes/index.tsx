@@ -15,7 +15,7 @@ import Charges from "../components/charges/ChargeManagement";
 import TenantManagement from "../components/tenants/TenantManagement";
 import NotificationsManagement from "../components/notifications/NotificationsManagement";
 import PaymentManagement from "../components/payments/payment";
-
+import AttributesManagement from "../components/attributes/attributesManagment";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -73,6 +73,12 @@ export const routes: AppRoute[] = [
     protected: true,
     children: [{ index: true, element: PaymentManagement, protected: true }],
   },
+  {
+    path: "/attributes",
+    element: MainLayout,
+    protected: true,
+    children: [{index: true, element:AttributesManagement, protected:true}]
+  }
 ];
 
 // FUNCTION TO CREATE PROTECTED AND PUBLIC ROUTES

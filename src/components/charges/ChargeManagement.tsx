@@ -24,6 +24,7 @@ const Charges = () => {
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const userRole = role ?? null;
+ 
 
   const enableStatistics = userRole === "super admin" || userRole === "admin";
   const enableCharge =
@@ -43,6 +44,8 @@ const Charges = () => {
   if (userRole === "tenant") {
     estateId = user?.tenants[0]?.estate?.id ?? 0;
   }
+
+  console.log("Estate id",estateId);
 
   const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } =
     useGetChargesbyEstateId(estateId ?? 0, { enabled: enableCharge });

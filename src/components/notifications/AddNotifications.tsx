@@ -240,6 +240,7 @@ const AddNotifications = ({ isOpen, onClose, onAdd }: AddNotificationsProps) => 
             Create Notification
           </button>
         </div>
+        
       </div>
     </div>
   );

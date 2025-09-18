@@ -52,10 +52,10 @@ const DashboardStat: React.FC = () => {
 
   const tenantPayments = tenantStatistic?.total_payments ?? 0;
   const tenantAmountPaid = tenantStatistic?.total_amount_paid ?? 0;
-  // const tenantOutstandingCharges = tenantStatistic?.outstanding_charges ?? [];
+  
 
 
-  // const totalProperties  = propertyStatistics?.
+  
 
   const getStatsForRole = (role: string | null) => {
     switch (role) {
