@@ -1,13 +1,16 @@
-import React, { useReducer, useMemo } from "react";
+import React, { useReducer, useMemo, useEffect } from "react";
 import type { CartItem, Cart } from "../types/cart";
 import type { Charge } from "../types/charges";
 import { CartContext, type CartContextValue } from "./cart-context";
+
+import { useAuth } from "../hooks/useAuth";
 
 type CartAction =
   | { type: "ADD_TO_CART"; payload: Charge }
   | { type: "REMOVE_FROM_CART"; payload: number }
   | { type: "UPDATE_QUANTITY"; payload: { chargeId: number; quantity: number } }
-  | { type: "CLEAR_CART" };
+  | { type: "CLEAR_CART" }
+  | { type: "HYDRATE"; payload: CartItem[] }; // <-- new action
 
 function cartReducer(state: CartItem[], action: CartAction): CartItem[] {
   switch (action.type) {
@@ -39,13 +42,53 @@ function cartReducer(state: CartItem[], action: CartAction): CartItem[] {
       );
     case "CLEAR_CART":
       return [];
+    case "HYDRATE":
+      return Array.isArray(action.payload) ? action.payload : [];
     default:
       return state;
   }
 }
 
+const STORAGE_VERSION = "v1";
+const storageKeyFor = (userId?: number | string) =>
+  `cart:${STORAGE_VERSION}:${userId ?? "guest"}`;
+
 export default function CartProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth(); 
+  const userId = user?.user?.id ?? user?.id; 
+
   const [items, dispatch] = useReducer(cartReducer, []);
+
+  
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKeyFor(userId));
+      if (raw) {
+        const data = JSON.parse(raw) as { items?: CartItem[] };
+        if (Array.isArray(data?.items)) {
+          dispatch({ type: "HYDRATE", payload: data.items });
+        }
+      } else {
+     
+        dispatch({ type: "HYDRATE", payload: [] });
+      }
+    } catch {
+    
+      dispatch({ type: "HYDRATE", payload: [] });
+    }
+  }, [userId]);
+
+  // --- PERSIST to localStorage whenever items change
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        storageKeyFor(userId),
+        JSON.stringify({ items, updatedAt: new Date().toISOString() })
+      );
+    } catch {
+      // storage might be full or blocked; ignore
+    }
+  }, [items, userId]);
 
   const cart = useMemo<Cart>(
     () => ({

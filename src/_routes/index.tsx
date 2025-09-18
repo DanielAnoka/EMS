@@ -16,6 +16,7 @@ import TenantManagement from "../components/tenants/TenantManagement";
 import NotificationsManagement from "../components/notifications/NotificationsManagement";
 import PaymentManagement from "../components/payments/payment";
 import AttributesManagement from "../components/attributes/attributesManagment";
+import CartPage from "../components/cart/cartScreen";
 
 // APP ROUTES
 export const routes: AppRoute[] = [
@@ -65,7 +66,9 @@ export const routes: AppRoute[] = [
     path: "/notifications",
     element: MainLayout,
     protected: true,
-    children: [{ index: true, element: NotificationsManagement, protected: true }],
+    children: [
+      { index: true, element: NotificationsManagement, protected: true },
+    ],
   },
   {
     path: "/payments",
@@ -77,8 +80,14 @@ export const routes: AppRoute[] = [
     path: "/attributes",
     element: MainLayout,
     protected: true,
-    children: [{index: true, element:AttributesManagement, protected:true}]
-  }
+    children: [{ index: true, element: AttributesManagement, protected: true }],
+  },
+  {
+    path: "/cart",
+    element: MainLayout,
+    protected: true,
+    children: [{ index: true, element: CartPage, protected: true }],
+  },
 ];
 
 // FUNCTION TO CREATE PROTECTED AND PUBLIC ROUTES
