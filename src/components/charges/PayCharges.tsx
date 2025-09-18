@@ -1,17 +1,27 @@
-// components/charges/PayCharges.tsx
+
 import { Plus, X } from "lucide-react";
 import type { CreatePaymentPayload } from "../../types/payment";
 import type { Charge } from "../../types/charges";
 import { useAuth } from "../../hooks/useAuth";
 import { useCallback, useEffect, useState } from "react";
 import InputField from "../ui/InputField";
+import SelectField from "../ui/select";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (payload: CreatePaymentPayload) => void;
+  onAdd: (
+    payload: CreatePaymentPayload & { payment_method: PaymentMethod }
+  ) => void;
   charge: Charge | null;
 }
+
+type PaymentMethod = "card" | "bank_transfer" | "wallet" | "ussd";
+
+// Extend the existing payload locally to include payment_method
+type PayChargeForm = CreatePaymentPayload & {
+  payment_method: "" | PaymentMethod; // empty string means "not selected yet"
+};
 
 const NUMERIC_KEYS = [
   "charge_id",
@@ -22,26 +32,26 @@ const NUMERIC_KEYS = [
 
 const PayCharges = ({ isOpen, onClose, onAdd, charge }: ModalProps) => {
   const { user } = useAuth();
- 
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const initialEstatePropertyId = user?.tenants?.[0]?.estate_property?.id ?? 0;
-    const initialEstateId = user?.tenants?.[0]?.estate?.id ?? 0;
+  const initialEstateId = user?.tenants?.[0]?.estate?.id ?? 0;
   const initialTenantId = user?.tenants?.[0]?.id ?? 0;
 
-  const computeInitial = useCallback<() => CreatePaymentPayload>(() => {
+  const computeInitial = useCallback<() => PayChargeForm>(() => {
     return {
       phone_number: "",
       charge_id: charge?.id ?? 0,
       estate_property_id: initialEstatePropertyId,
       tenant_id: initialTenantId,
       amount: charge?.amount ?? 0,
-      estate_id:initialEstateId,
+      estate_id: initialEstateId,
+      payment_method: "", // not selected yet
     };
-  }, [charge, initialEstatePropertyId, initialTenantId,initialEstateId]);
+  }, [charge, initialEstatePropertyId, initialTenantId, initialEstateId]);
 
-  const [form, setForm] = useState<CreatePaymentPayload>(computeInitial);
-
+  const [form, setForm] = useState<PayChargeForm>(computeInitial);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,14 +61,11 @@ const PayCharges = ({ isOpen, onClose, onAdd, charge }: ModalProps) => {
   }, [isOpen, computeInitial]);
 
   const isNumericKey = (
-    key: keyof CreatePaymentPayload
+    key: keyof PayChargeForm
   ): key is (typeof NUMERIC_KEYS)[number] =>
     (NUMERIC_KEYS as readonly string[]).includes(key as string);
 
-  function handleChange<K extends keyof CreatePaymentPayload>(
-    key: K,
-    value: string
-  ) {
+  function handleChange<K extends keyof PayChargeForm>(key: K, value: string) {
     setForm((prev) => ({
       ...prev,
       [key]: isNumericKey(key) ? (value === "" ? 0 : Number(value)) : value,
@@ -75,6 +82,7 @@ const PayCharges = ({ isOpen, onClose, onAdd, charge }: ModalProps) => {
     if (!form.tenant_id) next.tenant_id = "Missing tenant";
     if (!form.estate_property_id) next.estate_property_id = "Missing property";
     if (!form.estate_id) next.estate_id = "Missing estate";
+    if (!form.payment_method) next.payment_method = "Select a payment method";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -88,7 +96,8 @@ const PayCharges = ({ isOpen, onClose, onAdd, charge }: ModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    onAdd(form);
+    // Cast to the stricter payload when calling onAdd
+    onAdd(form as CreatePaymentPayload & { payment_method: PaymentMethod });
     setForm(computeInitial());
     setErrors({});
     onClose();
@@ -137,6 +146,21 @@ const PayCharges = ({ isOpen, onClose, onAdd, charge }: ModalProps) => {
             placeholder="Enter amount"
             required
             error={errors.amount}
+          />
+          <SelectField
+            label="Payment Method"
+            id="payment_method"
+            placeholder="Select a payment method"
+            value={form.payment_method}
+            onChange={(v) => handleChange("payment_method", v)}
+            options={[
+              { label: "Card", value: "card" },
+              { label: "Bank Transfer", value: "bank_transfer" },
+              { label: "Wallet", value: "wallet" },
+              { label: "USSD", value: "ussd" },
+            ]}
+            error={errors.payment_method}
+            required
           />
 
           <div className="flex space-x-3 pt-4">
