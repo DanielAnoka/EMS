@@ -1,17 +1,17 @@
 import React from "react";
-import {  Menu, LogOut, User, Settings } from "lucide-react";
+import { Menu, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
 import { storage } from "../../utils/storage";
 import NotificationBell from "../notifications/NotificationBell";
-
+import Cart from "../cart/cartManagment";
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
-  const { user,role } = useAuth();
+  const { user, role } = useAuth();
   const handleLogout = () => {
     storage.removeToken();
     localStorage.removeItem("user");
@@ -40,7 +40,9 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button> */}
-            <NotificationBell />
+          <NotificationBell />
+
+          {role === "tenant" && <Cart />}
 
           {/* User menu */}
           <div className="relative group">
@@ -54,7 +56,6 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
                   {role?.toLocaleUpperCase()}
-
                 </div>
               </div>
             </button>
