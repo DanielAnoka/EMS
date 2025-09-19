@@ -3,19 +3,21 @@ import React from "react";
 interface InputFieldProps {
   id: string;
   label: string;
-  type?: string; // "text", "number", "email", etc.
+  type?: string;
   placeholder?: string;
   value: string;
   error?: string;
   required?: boolean;
-  as?: "input" | "textarea"; // NEW
-  rows?: number;             // only for textarea
+  as?: "input" | "textarea";
+  rows?: number;
   onChange: (value: string) => void;
+  readOnly?: boolean; 
 }
 
 const InputField: React.FC<InputFieldProps> = ({
   id,
   label,
+  readOnly = false,
   type = "text",
   placeholder,
   value,
@@ -43,9 +45,10 @@ const InputField: React.FC<InputFieldProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
+          readOnly={readOnly}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             error ? "border-red-300" : "border-gray-300"
-          }`}
+          } ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`} 
         />
       ) : (
         <input
@@ -55,9 +58,10 @@ const InputField: React.FC<InputFieldProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          readOnly={readOnly} 
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             error ? "border-red-300" : "border-gray-300"
-          }`}
+          } ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
         />
       )}
 

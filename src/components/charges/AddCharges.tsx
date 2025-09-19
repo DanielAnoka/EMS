@@ -21,7 +21,6 @@ type FormState = {
   amount: string;
   durationType: "" | DurationType;
   property_type_id: number | string;
-  status: 0 | 1;
 };
 
 const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
@@ -38,19 +37,21 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
 
   // Keep IDs undefined if missing (don’t coerce to 0 here)
   const currentUserId = user?.user?.id as number | undefined;
-  const currentEstateId = user?.user?.user_estate?.id ;
+  const currentEstateId = user?.user?.user_estate?.id;
 
   const [form, setForm] = useState<FormState>({
     name: "",
     amount: "",
     durationType: "",
     property_type_id: 3,
-    status: 1,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+  const handleChange = <K extends keyof FormState>(
+    key: K,
+    value: FormState[K]
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key as string]: "" }));
   };
@@ -62,7 +63,8 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
     if (!form.amount.trim() || !Number.isFinite(toNum(form.amount)))
       newErrors.amount = "Enter a valid amount";
     if (!form.durationType) newErrors.durationType = "Select a duration";
-    if (!currentUserId) newErrors.user_id = "Your user account is missing an ID.";
+    if (!currentUserId)
+      newErrors.user_id = "Your user account is missing an ID.";
 
     // Estate Admin must have an estate
     if (isEstateAdmin && !currentEstateId) {
@@ -74,21 +76,20 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
       return;
     }
 
- 
-    const estateIdForCreate: number =
-      isEstateAdmin ? (currentEstateId as number) : 0;
+    const estateIdForCreate: number = isEstateAdmin
+      ? (currentEstateId as number)
+      : 0;
 
     const payload: CreateChargePayload = {
       name: form.name.trim(),
       amount: toNum(form.amount),
       duration: DURATION_MAP[form.durationType as DurationType],
-      estate_id: estateIdForCreate,                 // ← now 0 for admin/super, estate id for estate admin
+      estate_id: estateIdForCreate,
       property_type_id: toNum(form.property_type_id),
-      status: form.status,
+      status: 1,
       user_id: currentUserId as number,
     };
 
-    // console.log("CreateChargePayload →", payload);
     onAdd(payload);
 
     setForm({
@@ -96,7 +97,6 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
       amount: "",
       durationType: "",
       property_type_id: 3,
-      status: 1,
     });
 
     onClose();
@@ -122,7 +122,9 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Add New Charge</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Add New Charge
+            </h2>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-150"
@@ -159,7 +161,9 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
                 id="durationType"
                 label="Duration *"
                 value={form.durationType}
-                onChange={(v) => handleChange("durationType", v as DurationType)}
+                onChange={(v) =>
+                  handleChange("durationType", v as DurationType)
+                }
                 placeholder="Select duration"
                 options={[
                   { label: "Monthly", value: "monthly" },
@@ -191,7 +195,11 @@ const AddCharges = ({ isOpen, onClose, onAdd }: AddChargesProps) => {
               onClick={handleSubmit}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
               disabled={isEstateAdmin && !currentEstateId}
-              title={isEstateAdmin && !currentEstateId ? "No active estate" : undefined}
+              title={
+                isEstateAdmin && !currentEstateId
+                  ? "No active estate"
+                  : undefined
+              }
             >
               <Plus className="w-4 h-4" />
               Add Charge

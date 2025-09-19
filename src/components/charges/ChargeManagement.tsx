@@ -19,12 +19,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCreatePayment } from "../../services/payments";
 import PayCharges from "./PayCharges";
+import type { CreatePaymentPayload } from "../../types/payment";
 
 const Charges = () => {
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const userRole = role ?? null;
- 
 
   const enableStatistics = userRole === "super admin" || userRole === "admin";
   const enableCharge =
@@ -45,7 +45,7 @@ const Charges = () => {
     estateId = user?.tenants[0]?.estate?.id ?? 0;
   }
 
-  console.log("Estate id",estateId);
+  console.log("Estate id", estateId);
 
   const { data: chargesByEstateId = [], isLoading: isLoadingByEstateId } =
     useGetChargesbyEstateId(estateId ?? 0, { enabled: enableCharge });
@@ -68,9 +68,8 @@ const Charges = () => {
   const isSuperOrAdmin =
     roles.includes("super admin") || roles.includes("admin");
   const isEstateAdmin = roles.includes("estate admin");
-   const isTenant = roles.includes("tenant");
+  const isTenant = roles.includes("tenant");
 
-  // ✅ Role-based visibility
   const visibleCharges: Charge[] = useMemo(() => {
     if (!userRole) return [];
     if (userRole === "super admin" || userRole === "admin") return charges;
@@ -121,38 +120,42 @@ const Charges = () => {
     });
   };
 
-  const { mutate: createPayment,  } = useCreatePayment();
+  const { mutate: createPayment } = useCreatePayment();
 
   const openPayModal = (charge: Charge) => {
     setSelectedCharge(charge);
     setIsPayOpen(true);
   };
+  type PaymentMethod = "paystack";
+  const handlePaySubmit = (
+    payload: CreatePaymentPayload & {
+      payment_method: PaymentMethod;
+      reference?: string;
+      gateway?: "paystack";
+      status?: "success" | "failed" | "cancelled";
+    }
+  ) => {
+    // Only Paystack supported for now
+    if (payload.payment_method !== "paystack") {
+      // Optional: show a toast or just return
+      // toast.error("Only Paystack is supported at the moment.");
+      return;
+    }
 
-  const handlePaySubmit = (payload: {
-    phone_number: string;
-    charge_id: number;
-    estate_property_id: number;
-    tenant_id: number;
-    amount: number;
-    estate_id:number;
-  }) => {
     createPayment(payload, {
       onSuccess: () => {
-        toast.success("Payment initialized successfully.");
+        toast.success("Payment recorded successfully.");
         setIsPayOpen(false);
         setSelectedCharge(null);
-        // If your payments affect any list, invalidate here
-        // queryClient.invalidateQueries({ queryKey: ["payments", tenantId] });
       },
       onError: (err: unknown) => {
         console.error(err);
-        toast.error("Failed to initialize payment.");
+        toast.error("Failed to record payment.");
       },
     });
   };
-  const isBusy =
-    isLoading || // global/all charges
-    isLoadingByEstateId; // estate-scoped fetch
+
+  const isBusy = isLoading || isLoadingByEstateId;
 
   return (
     <>

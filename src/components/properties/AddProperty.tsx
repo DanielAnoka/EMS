@@ -14,6 +14,7 @@ import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
 import TenantForm from "./tenantform";
 import { useGetEstates } from "../../services/estates";
+import { useGetAttribute } from "../../services/attributes";
 
 interface AddPropertyProps {
   isOpen: boolean;
@@ -31,22 +32,36 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   const enableEstateStats = userRole === "super admin" || userRole === "admin";
   const { data: estates } = useGetEstates({ enabled: enableEstateStats });
 
+  const { data: attributes = [] } = useGetAttribute();
+
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: string;
+    price: string;
+    description: string;
+    status: "" | "available" | "sold" | "rented";
+    property_type_id: number;
+    attributes: string[];
+    estate_id: number;
+    owner_status: boolean | null;
+    landlord_name: string;
+    landlord_email: string;
+    tenant_status: boolean | null;
+    tenant_name: string;
+    tenant_email: string;
+  }>({
     title: "",
     price: "",
     description: "",
     status: "" as "" | "available" | "sold" | "rented",
-    bedrooms: "",
-    bathrooms: "",
-    toilets: "",
     property_type_id: 3,
+    attributes: [],
     estate_id: 0,
-    owner_status: null as boolean | null,
+    owner_status: null,
     landlord_name: "",
     landlord_email: "",
-    tenant_status: null as boolean | null,
+    tenant_status: null,
     tenant_name: "",
     tenant_email: "",
   });
@@ -67,15 +82,6 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
       };
     }
   }, [isOpen]);
-
-  // useEffect(() => {
-  //   if (!isOpen) return;
-  //   const onKey = (e: KeyboardEvent) => {
-  //     if (e.key === "Escape") onClose();
-  //   };
-  //   window.addEventListener("keydown", onKey);
-  //   return () => window.removeEventListener("keydown", onKey);
-  // }, [isOpen, onClose]);
 
   const handleChange = <K extends keyof typeof form>(
     key: K,
@@ -123,26 +129,33 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     setTenant((prev) => ({ ...prev, [key]: value }));
   };
 
+  const toggleAttribute = (name: string) => {
+    setForm((prev) => {
+      const exists = prev.attributes.includes(name);
+      const next = exists
+        ? prev.attributes.filter((n) => n !== name)
+        : [...prev.attributes, name];
+      return { ...prev, attributes: next };
+    });
+    setErrors((prev) => ({ ...prev, attributes: "" }));
+  };
+  const selectAllAttributes = () => {
+    const allNames = attributes.map((a) => a.name).filter(Boolean);
+    setForm((prev) => ({ ...prev, attributes: allNames }));
+    setErrors((prev) => ({ ...prev, attributes: "" }));
+  };
+  const clearAllAttributes = () =>
+    setForm((prev) => ({ ...prev, attributes: [] }));
+
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
     if (!form.title.trim()) newErrors.title = "Title is required";
     if (!form.price.trim()) newErrors.price = "Price is required";
     if (!form.status) newErrors.status = "Status is required";
-    if (!form.bedrooms.trim()) newErrors.bedrooms = "Bedrooms is required";
-    if (!form.bathrooms.trim()) newErrors.bathrooms = "Bathrooms is required";
-    if (!form.toilets.trim()) newErrors.toilets = "Toilets is required";
+    if (form.attributes.length === 0)
+      newErrors.attributes = "Select at least one attribute";
     if (!form.estate_id) newErrors.estate_id = "Estate is required";
     if (form.owner_status === null) newErrors.owner_status = "Select ownership";
-
-    // Numeric checks
-    const numCheck = (v: string) =>
-      Number.isFinite(Number(v)) && Number(v) >= 0;
-    if (form.bedrooms && !numCheck(form.bedrooms))
-      newErrors.bedrooms = "Enter a valid number";
-    if (form.bathrooms && !numCheck(form.bathrooms))
-      newErrors.bathrooms = "Enter a valid number";
-    if (form.toilets && !numCheck(form.toilets))
-      newErrors.toilets = "Enter a valid number";
 
     // If estate doesn't own it → require landlord; tenant optional based on toggle
     if (form.owner_status === false) {
@@ -167,9 +180,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
       price: toNum(form.price),
       description: form.description?.trim() || "",
       status: form.status as "available" | "sold" | "rented",
-      bedrooms: toNum(form.bedrooms),
-      bathrooms: toNum(form.bathrooms),
-      toilets: toNum(form.toilets),
+      attributes: form.attributes,
       property_type_id: toNum(form.property_type_id),
       estate_id: toNum(form.estate_id),
       owner_status: Boolean(form.owner_status),
@@ -200,11 +211,9 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
       price: "",
       description: "",
       status: "available",
-      bedrooms: "",
-      bathrooms: "",
-      toilets: "",
       property_type_id: 0,
       estate_id: 0,
+      attributes: [],
       owner_status: null,
       landlord_name: "",
       landlord_email: "",
@@ -273,35 +282,7 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
               required
               error={errors.price}
             />
-            <InputField
-              id="bedrooms"
-              label="Bedrooms"
-              value={form.bedrooms}
-              onChange={(v) => handleChange("bedrooms", v)}
-              placeholder="e.g. 3"
-              required
-              error={errors.bedrooms}
-            />
-            <InputField
-              id="bathrooms"
-              label="Bathrooms"
-              type="number"
-              value={form.bathrooms}
-              onChange={(v) => handleChange("bathrooms", v)}
-              placeholder="e.g. 2"
-              required
-              error={errors.bathrooms}
-            />
-            <InputField
-              id="toilets"
-              label="Toilets"
-              type="number"
-              value={form.toilets}
-              onChange={(v) => handleChange("toilets", v)}
-              placeholder="e.g. 2"
-              required
-              error={errors.toilets}
-            />
+
             <SelectField
               id="status"
               label="Status"
@@ -336,15 +317,57 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
             )}
           </div>
 
-          <InputField
-            id="description"
-            label="Description"
-            as="textarea"
-            rows={4}
-            value={form.description}
-            onChange={(v) => setForm({ ...form, description: v })}
-            error={errors.description}
-          />
+              {/* ✅ Attributes (checkbox grid) — appears BEFORE ownership question */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">Attributes</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={selectAllAttributes}
+                  className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
+                 
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAllAttributes}
+                  className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
+                  disabled={form.attributes.length === 0}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+           
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {attributes.map((attr: any) => {
+                  const name = attr?.name as string;
+                  const label = attr?.label ?? name;
+                  const checked = form.attributes.includes(name);
+                  return (
+                    <label
+                      key={name}
+                      className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={checked}
+                        onChange={() => toggleAttribute(name)}
+                      />
+                      <span className="text-sm text-gray-700">{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+         
+            {errors.attributes && (
+              <p className="mt-1 text-xs text-red-600">{errors.attributes}</p>
+            )}
+          </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
@@ -437,7 +460,6 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
           )}
         </div>
 
-        {/* Footer (sticks at bottom of panel) */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
           <button
             type="button"

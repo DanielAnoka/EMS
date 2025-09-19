@@ -4,9 +4,7 @@ export type CreateProperty = {
   description?: string;
   status: "available" | "rented" | "sold";
   property_type_id: number;
-  bedrooms: number;
-  bathrooms: number;
-  toilets: number;
+  attributes: string[];
   estate_id: number;
   owner_status?: boolean;
   landlord_name?: string;

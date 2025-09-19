@@ -2,6 +2,8 @@ import { getDurationLabel, type Charge } from "../../types/charges";
 import { formatNaira } from "../../utils";
 import { useCart } from "../../context/useCart";
 import { ShoppingCart } from "lucide-react";
+import { useMemo, useState } from "react";
+import Pagination from "../ui/Pagination";
 
 interface ChargesTableProps {
   charges: Charge[];
@@ -22,12 +24,18 @@ const renderStatus = (status: number) => {
   );
 };
 
-const ChargesTable = ({
-  charges,
-  canPay = false,
-  onPay,
-}: ChargesTableProps) => {
+const ChargesTable = ({ charges, canPay = false, onPay }: ChargesTableProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const { addToCart } = useCart();
+
+  const totalPages = Math.max(1, Math.ceil(charges.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const paginated = useMemo(
+    () => charges.slice(startIndex, startIndex + itemsPerPage),
+    [charges, startIndex, itemsPerPage]
+  );
 
   const handleAddToCart = (charge: Charge) => {
     addToCart(charge);
@@ -48,18 +56,16 @@ const ChargesTable = ({
         </thead>
 
         <tbody className="divide-y divide-gray-200">
-          {charges.map((charge, index) => {
+          {paginated.map((charge, idx) => {
             const isActive = charge.status === 1;
+            const sn = startIndex + idx + 1;
+
             return (
               <tr key={charge.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {index + 1}
-                </td>
+                <td className="px-6 py-4 font-medium text-gray-900">{sn}</td>
                 <td className="px-6 py-3">{charge.name}</td>
                 <td className="px-6 py-3">{formatNaira(charge.amount)}</td>
-                <td className="px-10 py-3">
-                  {getDurationLabel(charge.duration)}
-                </td>
+                <td className="px-10 py-3">{getDurationLabel(charge.duration)}</td>
                 <td className="px-6 py-3">{renderStatus(charge.status)}</td>
 
                 {canPay && (
@@ -69,9 +75,7 @@ const ChargesTable = ({
                         disabled={!isActive}
                         onClick={() => handleAddToCart(charge)}
                         className={`px-3 py-1.5 rounded-lg text-white text-xs font-medium flex items-center ${
-                          isActive
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-gray-300 cursor-not-allowed"
+                          isActive ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
                         }`}
                         title="Add to cart"
                       >
@@ -82,9 +86,7 @@ const ChargesTable = ({
                         disabled={!isActive}
                         onClick={() => onPay?.(charge)}
                         className={`px-3 py-1.5 rounded-lg text-white text-xs font-medium ${
-                          isActive
-                            ? "bg-blue-600 hover:bg-blue-700"
-                            : "bg-gray-300 cursor-not-allowed"
+                          isActive ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"
                         }`}
                         title="Pay now"
                       >
@@ -98,6 +100,14 @@ const ChargesTable = ({
           })}
         </tbody>
       </table>
+
+      {/* Reusable Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        showWhenSinglePage
+      />
     </div>
   );
 };
