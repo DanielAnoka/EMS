@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { Plus, X } from "lucide-react";
@@ -36,6 +35,8 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
 
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
+const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
+
   const [form, setForm] = useState<{
     title: string;
     price: string;
@@ -111,11 +112,6 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
 
     setErrors((e) => {
       const {
-        landlord_name,
-        landlord_email,
-        tenant_status,
-        tenant_name,
-        tenant_email,
         ...rest
       } = e;
       return rest;
@@ -129,100 +125,207 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
     setTenant((prev) => ({ ...prev, [key]: value }));
   };
 
-  const toggleAttribute = (name: string) => {
-    setForm((prev) => {
-      const exists = prev.attributes.includes(name);
-      const next = exists
-        ? prev.attributes.filter((n) => n !== name)
-        : [...prev.attributes, name];
-      return { ...prev, attributes: next };
-    });
-    setErrors((prev) => ({ ...prev, attributes: "" }));
-  };
-  const selectAllAttributes = () => {
-    const allNames = attributes.map((a) => a.name).filter(Boolean);
-    setForm((prev) => ({ ...prev, attributes: allNames }));
-    setErrors((prev) => ({ ...prev, attributes: "" }));
-  };
-  const clearAllAttributes = () =>
-    setForm((prev) => ({ ...prev, attributes: [] }));
+const toggleAttribute = (name: string) => {
+  setForm((prev) => {
+    const exists = prev.attributes.includes(name);
+    const next = exists
+      ? prev.attributes.filter((n) => n !== name)
+      : [...prev.attributes, name];
 
-  const handleSubmit = async () => {
-    const newErrors: Record<string, string> = {};
-    if (!form.title.trim()) newErrors.title = "Title is required";
-    if (!form.price.trim()) newErrors.price = "Price is required";
-    if (!form.status) newErrors.status = "Status is required";
-    if (form.attributes.length === 0)
-      newErrors.attributes = "Select at least one attribute";
-    if (!form.estate_id) newErrors.estate_id = "Estate is required";
-    if (form.owner_status === null) newErrors.owner_status = "Select ownership";
+    return { ...prev, attributes: next };
+  });
 
-    // If estate doesn't own it → require landlord; tenant optional based on toggle
-    if (form.owner_status === false) {
-      if (!landlord.name.trim())
-        newErrors.landlord_name = "Landlord name is required";
-      if (!landlord.email.trim())
-        newErrors.landlord_email = "Landlord email is required";
-
-      if (form.tenant_status === null) {
-        newErrors.tenant_status = "Select if there is a current tenant";
-      } else if (form.tenant_status === true) {
-        if (!tenant.name.trim())
-          newErrors.tenant_name = "Tenant name is required";
-        if (!tenant.email.trim())
-          newErrors.tenant_email = "Tenant email is required";
-      }
+  setAttributeValues((prev) => {
+    const exists = form.attributes.includes(name);
+    if (exists) {
+      // removing → drop its value
+      const { [name]: _, ...rest } = prev;
+      return rest;
     }
-    const toNum = (v: string | number) =>
-      typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
-    const payload: CreateProperty = {
-      title: form.title.trim(),
-      price: toNum(form.price),
-      description: form.description?.trim() || "",
-      status: form.status as "available" | "sold" | "rented",
-      attributes: form.attributes,
-      property_type_id: toNum(form.property_type_id),
-      estate_id: toNum(form.estate_id),
-      owner_status: Boolean(form.owner_status),
+    // adding → set a default if not present
+    return prev[name] ? prev : { ...prev, [name]: "1" };
+  });
 
-      ...(form.owner_status === false
-        ? {
-            landlord_name: form.landlord_name || landlord.name.trim(),
-            landlord_email: form.landlord_email || landlord.email.trim(),
-            tenant_status: Boolean(form.tenant_status),
-            ...(form.tenant_status
-              ? {
-                  tenant_name: form.tenant_name || tenant.name.trim(),
-                  tenant_email: form.tenant_email || tenant.email.trim(),
-                }
-              : {}),
-          }
-        : {
-            landlord_name: "",
-            landlord_email: "",
-            tenant_status: false,
-          }),
-    };
+  setErrors((prev) => ({ ...prev, attributes: "" }));
+};
 
-    onAdd(payload);
 
-    setForm({
-      title: "",
-      price: "",
-      description: "",
-      status: "available",
-      property_type_id: 0,
-      estate_id: 0,
-      attributes: [],
-      owner_status: null,
-      landlord_name: "",
-      landlord_email: "",
-      tenant_status: false,
-      tenant_name: "",
-      tenant_email: "",
-    });
-    onClose();
+ const selectAllAttributes = () => {
+  const allNames = attributes.map((a) => a.name).filter(Boolean);
+  setForm((prev) => ({ ...prev, attributes: allNames }));
+  setAttributeValues((prev) => {
+    const next = { ...prev };
+    for (const n of allNames) if (!next[n]) next[n] = "1";
+    return next;
+  });
+  setErrors((prev) => ({ ...prev, attributes: "" }));
+};
+
+const clearAllAttributes = () => {
+  setForm((prev) => ({ ...prev, attributes: [] }));
+  setAttributeValues({});
+};
+
+  // const handleSubmit = async () => {
+  //   const newErrors: Record<string, string> = {};
+  //   if (!form.title.trim()) newErrors.title = "Title is required";
+  //   if (!form.price.trim()) newErrors.price = "Price is required";
+  //   if (!form.status) newErrors.status = "Status is required";
+  //   if (form.attributes.length === 0)
+  //     newErrors.attributes = "Select at least one attribute";
+  //   if (!form.estate_id) newErrors.estate_id = "Estate is required";
+  //   if (form.owner_status === null) newErrors.owner_status = "Select ownership";
+
+  //   // If estate doesn't own it → require landlord; tenant optional based on toggle
+  //   if (form.owner_status === false) {
+  //     if (!landlord.name.trim())
+  //       newErrors.landlord_name = "Landlord name is required";
+  //     if (!landlord.email.trim())
+  //       newErrors.landlord_email = "Landlord email is required";
+
+  //     if (form.tenant_status === null) {
+  //       newErrors.tenant_status = "Select if there is a current tenant";
+  //     } else if (form.tenant_status === true) {
+  //       if (!tenant.name.trim())
+  //         newErrors.tenant_name = "Tenant name is required";
+  //       if (!tenant.email.trim())
+  //         newErrors.tenant_email = "Tenant email is required";
+  //     }
+  //   }
+  //   const toNum = (v: string | number) =>
+  //     typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+  //   const payload: CreateProperty = {
+  //     title: form.title.trim(),
+  //     price: toNum(form.price),
+  //     description: form.description?.trim() || "",
+  //     status: form.status as "available" | "sold" | "rented",
+  //     attributes: form.attributes,
+  //     property_type_id: toNum(form.property_type_id),
+  //     estate_id: toNum(form.estate_id),
+  //     owner_status: Boolean(form.owner_status),
+
+  //     ...(form.owner_status === false
+  //       ? {
+  //           landlord_name: form.landlord_name || landlord.name.trim(),
+  //           landlord_email: form.landlord_email || landlord.email.trim(),
+  //           tenant_status: Boolean(form.tenant_status),
+  //           ...(form.tenant_status
+  //             ? {
+  //                 tenant_name: form.tenant_name || tenant.name.trim(),
+  //                 tenant_email: form.tenant_email || tenant.email.trim(),
+  //               }
+  //             : {}),
+  //         }
+  //       : {
+  //           landlord_name: "",
+  //           landlord_email: "",
+  //           tenant_status: false,
+  //         }),
+  //   };
+
+  //   onAdd(payload);
+
+  //   setForm({
+  //     title: "",
+  //     price: "",
+  //     description: "",
+  //     status: "available",
+  //     property_type_id: 0,
+  //     estate_id: 0,
+  //     attributes: [],
+  //     owner_status: null,
+  //     landlord_name: "",
+  //     landlord_email: "",
+  //     tenant_status: false,
+  //     tenant_name: "",
+  //     tenant_email: "",
+  //   });
+  //   onClose();
+  // };
+const handleSubmit = async () => {
+  const newErrors: Record<string, string> = {};
+
+  // existing validations...
+  if (form.attributes.length === 0) newErrors.attributes = "Select at least one attribute";
+
+  // ensure every selected attribute has a chosen value
+  for (const name of form.attributes) {
+    if (!attributeValues[name]) {
+      newErrors[`attr_${name}`] = `Select a value for ${name}`;
+    }
+  }
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+
+  const toNum = (v: string | number) =>
+    typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+
+  // build attributes payload
+  const attributesPayload = form.attributes
+    .map((name) => {
+      const def = attributes.find((a: { name: string; }) => a.name === name);
+      if (!def) return null;
+      return {
+        id: def.id,
+        value: def.name,              
+        label: attributeValues[name], 
+      };
+    })
+    .filter((x): x is { id: number; value: string; label: string } => Boolean(x));
+
+  const payload: CreateProperty = {
+    title: form.title.trim(),
+    price: toNum(form.price),
+    description: form.description?.trim() || "",
+    status: form.status as "available" | "sold" | "rented",
+    property_type_id: toNum(form.property_type_id),
+    estate_id: toNum(form.estate_id),
+    attributes: attributesPayload, // <-- now the correct shape
+    owner_status: Boolean(form.owner_status),
+
+    ...(form.owner_status === false
+      ? {
+          landlord_name: form.landlord_name || landlord.name.trim(),
+          landlord_email: form.landlord_email || landlord.email.trim(),
+          tenant_status: Boolean(form.tenant_status),
+          ...(form.tenant_status
+            ? {
+                tenant_name: form.tenant_name || tenant.name.trim(),
+                tenant_email: form.tenant_email || tenant.email.trim(),
+              }
+            : {}),
+        }
+      : {
+          landlord_name: "",
+          landlord_email: "",
+          tenant_status: false,
+        }),
   };
+
+  onAdd(payload);
+
+
+  setForm({
+    title: "",
+    price: "",
+    description: "",
+    status: "available",
+    property_type_id: 0,
+    estate_id: 0,
+    attributes: [],
+    owner_status: null,
+    landlord_name: "",
+    landlord_email: "",
+    tenant_status: false,
+    tenant_name: "",
+    tenant_email: "",
+  });
+  setAttributeValues({});
+  onClose();
+};
 
   return (
     <div
@@ -317,16 +420,17 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
             )}
           </div>
 
-              {/* ✅ Attributes (checkbox grid) — appears BEFORE ownership question */}
+          {/* ✅ Attributes (checkbox grid) — appears BEFORE ownership question */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700">Attributes</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Attributes
+              </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={selectAllAttributes}
                   className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
-                 
                 >
                   Select All
                 </button>
@@ -341,29 +445,28 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
               </div>
             </div>
 
-           
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {attributes.map((attr: any) => {
-                  const name = attr?.name as string;
-                  const label = attr?.label ?? name;
-                  const checked = form.attributes.includes(name);
-                  return (
-                    <label
-                      key={name}
-                      className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                        checked={checked}
-                        onChange={() => toggleAttribute(name)}
-                      />
-                      <span className="text-sm text-gray-700">{label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-         
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {attributes.map((attr: any) => {
+                const name = attr?.name as string;
+                const label = attr?.label ?? name;
+                const checked = form.attributes.includes(name);
+                return (
+                  <label
+                    key={name}
+                    className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      checked={checked}
+                      onChange={() => toggleAttribute(name)}
+                    />
+                    <span className="text-sm text-gray-700">{label}</span>
+                  </label>
+                );
+              })}
+            </div>
+
             {errors.attributes && (
               <p className="mt-1 text-xs text-red-600">{errors.attributes}</p>
             )}

@@ -12,6 +12,11 @@ export interface LoginResponse {
   token: string;
 }
 
+export interface LoginPayload {
+  email:string;
+  password:string
+}
+
 type Pivot = {
   model_type: string;
   model_id: number;
@@ -115,3 +120,13 @@ export type CurrentUser = {
   roles: string[];
   tenants: TenantRes[];
 };
+
+export type UserRole = "Admin" | "SuperAdmin" | "EstateAdmin" | "Tenant";
+
+export interface RegisterPayload {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  role: UserRole;
+}

@@ -1,10 +1,15 @@
+export type PropertyAttribute = {
+  id: number;
+  value: string;
+  label: string;
+};
 export type CreateProperty = {
   title: string;
   price: number;
   description?: string;
   status: "available" | "rented" | "sold";
   property_type_id: number;
-  attributes: string[];
+  attributes: PropertyAttribute[];
   estate_id: number;
   owner_status?: boolean;
   landlord_name?: string;
@@ -86,4 +91,8 @@ export interface Property {
     email: string;
     phone_number: string;
   };
+    attributes:{
+      value:string;
+      label:string
+    }
 }

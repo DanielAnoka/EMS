@@ -30,8 +30,8 @@ const PropertyTable = ({
             <th className="px-6 py-3">S/N</th>
             <th className="px-6 py-3">Name</th>
             <th className="px-6 py-3">Price</th>
-            <th className="px-6 py-3">Bedroom </th>
-            <th className="px-6 py-3">Toilet</th>
+            {/* <th className="px-6 py-3">Bedroom </th>
+            <th className="px-6 py-3">Toilet</th> */}
             <th className="px-6 py-3">Created</th>
             <th className="px-6 py-3">Status</th>
             <th className="px-6 py-3" />
@@ -51,8 +51,8 @@ const PropertyTable = ({
                 }).format(Number(prop.price))}
               </td>
 
-              <td className="px-6 py-3">{prop.bedrooms}</td>
-              <td className="px-6 py-3">{prop.toilets}</td>
+              {/* <td className="px-6 py-3">{prop.bedrooms}</td>
+              <td className="px-6 py-3">{prop.toilets}</td> */}
 
               <td className="px-6 py-4 text-gray-500">
                 {new Date(prop.created_at).toLocaleDateString("en-US", {
