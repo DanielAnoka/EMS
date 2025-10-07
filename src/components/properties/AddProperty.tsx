@@ -151,7 +151,13 @@ const toggleAttribute = (name: string) => {
 
 
  const selectAllAttributes = () => {
-  const allNames = attributes.map((a) => a.name).filter(Boolean);
+  interface Attribute {
+    id: number;
+    name: string;
+    label?: string;
+  }
+
+  const allNames: string[] = (attributes as Attribute[]).map((a) => a.name).filter(Boolean);
   setForm((prev) => ({ ...prev, attributes: allNames }));
   setAttributeValues((prev) => {
     const next = { ...prev };
