@@ -47,8 +47,7 @@ export const useLogin = () => {
     },
     onError: async (err) => {
       if (err instanceof AxiosError) {
-        const msg =
-          err.response?.data?.message || "An error occured, Please try again.";
+        const msg = err.response?.data?.message || "An error occured, Please try again.";
         toast.error(msg);
       } else {
         toast.error("An unexpected error occurred.");

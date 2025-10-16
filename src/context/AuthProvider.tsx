@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo } from "react";
 import type { AuthContextValue } from "../types/auth";
 import { useGetCurrentUser } from "../services/auth";
@@ -25,6 +24,7 @@ export function AuthProvider({ children }: Props) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);
   if (!ctx)

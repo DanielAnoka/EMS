@@ -35,7 +35,8 @@ import { useAuth } from "../../hooks/useAuth";
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const userName = user?.user?.name || "User";
-  // console.log("User Name:", user);
+
+ 
 
   return (
     <div className="space-y-8">

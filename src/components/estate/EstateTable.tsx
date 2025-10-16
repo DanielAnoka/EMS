@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import type { Estates } from "../../types/estate";
 import { Edit, Eye, Trash2 } from "lucide-react";
@@ -84,7 +85,7 @@ const EstateTable: React.FC<EstateTableProps> = ({
                     <Eye className="w-5 h-5" />
                   </button>
                 )}
-                {canEdit && (
+                {/* {canEdit && (
                   <button
                     onClick={() => onEdit?.(estate)}
                     className="text-gray-500 hover:text-green-600 transition"
@@ -101,7 +102,7 @@ const EstateTable: React.FC<EstateTableProps> = ({
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
-                )}
+                )} */}
               </td>
             </tr>
           ))}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { Mail, Edit, Eye } from "lucide-react";
 import type { Role } from "../../services/auth";
@@ -24,8 +25,8 @@ export const UserTable: React.FC<UserTableProps> = ({
   users,
   onEdit,
   onView,
-  canEdit = true,
   canView = true,
+  canEdit = true,
 }) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
@@ -71,7 +72,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                  {user.phone_number || "N/A"}
                 </td>
               <td className="px-6 py-4 text-right flex justify-end space-x-3">
-                {canView && (
+                {/* {canView && (
                   <button
                     onClick={() => onView?.(user)}
                     className="text-gray-500 hover:text-blue-600 transition"
@@ -79,7 +80,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                   >
                     <Eye className="w-5 h-5" />
                   </button>
-                )}
+                )} */}
                 {canEdit && (
                   <button
                     onClick={() => onEdit?.(user)}
