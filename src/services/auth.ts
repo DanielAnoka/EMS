@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-query";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
 import type { CurrentUser } from "../types/auth";
 import { storage } from "../utils/storage";
@@ -31,7 +30,6 @@ export interface RegisterPayload {
 }
 
 export const useLogin = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: LoginPayload) => {
@@ -43,11 +41,11 @@ export const useLogin = () => {
       storage.setToken(data.token);
       queryClient.invalidateQueries({ queryKey: ["current_user"] });
       toast.success("Login successful");
-      navigate("/dashboard");
     },
     onError: async (err) => {
       if (err instanceof AxiosError) {
-        const msg = err.response?.data?.message || "An error occured, Please try again.";
+        const msg =
+          err.response?.data?.message || "An error occured, Please try again.";
         toast.error(msg);
       } else {
         toast.error("An unexpected error occurred.");
@@ -147,16 +145,15 @@ export const useGetEstateStatistics = (
       );
       return data;
     },
-    enabled: !!estateId, 
-    staleTime: 60_000, 
-    gcTime: 5 * 60_000, 
+    enabled: !!estateId,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
     retry: 1,
     ...opts,
   });
 
-
 export interface TenantStatistics {
-  outstanding_charges: any[];  
+  outstanding_charges: any[];
   total_amount_paid: number;
   total_payments: number;
 }
@@ -177,11 +174,9 @@ export const useGetTenantStatistics = (
       );
       return data;
     },
-    enabled: !!tenantId, 
-    staleTime: 60_000,  
-    gcTime: 5 * 60_000, 
+    enabled: !!tenantId,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
     retry: 1,
     ...opts,
   });
-
-
