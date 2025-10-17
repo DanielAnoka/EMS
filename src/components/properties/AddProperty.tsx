@@ -11,7 +11,7 @@ import InputField from "../ui/InputField";
 import { useAuth } from "../../hooks/useAuth";
 import SelectField from "../ui/select";
 import LandlordForm from "./landLord";
-import TenantForm from "./tenantform";
+import TenantForm from "./tenantForm";
 import { useGetEstates } from "../../services/estates";
 import { useGetAttribute } from "../../services/attributes";
 
@@ -20,6 +20,12 @@ interface AddPropertyProps {
   onClose: () => void;
   onAdd: (propertyData: CreateProperty) => void;
 }
+
+type AttributeDef = {
+  id: number;
+  name: string;
+  label?: string;
+};
 
 const initialLandlord: LandlordInfo = { name: "", email: "" };
 const initialTenant: TenantInfo = { name: "", email: "", status: "active" };
@@ -31,11 +37,15 @@ const AddProperty = ({ isOpen, onClose, onAdd }: AddPropertyProps) => {
   const enableEstateStats = userRole === "super admin" || userRole === "admin";
   const { data: estates } = useGetEstates({ enabled: enableEstateStats });
 
-  const { data: attributes = [] } = useGetAttribute();
+  const { data: attributes = [] as AttributeDef[] } = useGetAttribute();
 
   const [landlord, setLandlord] = useState<LandlordInfo>(initialLandlord);
   const [tenant, setTenant] = useState<TenantInfo>(initialTenant);
-const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
+
+  // holds the numeric (string) value per selected attribute name
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>(
+    {}
+  );
 
   const [form, setForm] = useState<{
     title: string;
@@ -43,7 +53,7 @@ const [attributeValues, setAttributeValues] = useState<Record<string, string>>({
     description: string;
     status: "" | "available" | "sold" | "rented";
     property_type_id: number;
-    attributes: string[];
+    attributes: string[]; // list of selected attribute names
     estate_id: number;
     owner_status: boolean | null;
     landlord_name: string;
@@ -72,6 +82,7 @@ const [attributeValues, setAttributeValues] = useState<Record<string, string>>({
       setForm((prev) => ({ ...prev, estate_id: user.user.user_estate.id }));
     }
   }, [user]);
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
@@ -89,7 +100,6 @@ const [attributeValues, setAttributeValues] = useState<Record<string, string>>({
     value: (typeof form)[K]
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-
     setErrors((prev) => ({ ...prev, [key as string]: "" }));
   };
 
@@ -111,9 +121,7 @@ const [attributeValues, setAttributeValues] = useState<Record<string, string>>({
     }));
 
     setErrors((e) => {
-      const {
-        ...rest
-      } = e;
+      const { ...rest } = e;
       return rest;
     });
   };
@@ -121,217 +129,186 @@ const [attributeValues, setAttributeValues] = useState<Record<string, string>>({
   const handleLandlordChange = (key: keyof LandlordInfo, value: string) => {
     setLandlord((prev) => ({ ...prev, [key]: value }));
   };
+
   const handleTenantChange = (key: keyof TenantInfo, value: string) => {
     setTenant((prev) => ({ ...prev, [key]: value }));
   };
 
-const toggleAttribute = (name: string) => {
-  setForm((prev) => {
-    const exists = prev.attributes.includes(name);
-    const next = exists
-      ? prev.attributes.filter((n) => n !== name)
-      : [...prev.attributes, name];
+  // Safely toggle an attribute and keep attributeValues in sync
+  const toggleAttribute = (name: string) => {
+    setForm((prev) => {
+      const exists = prev.attributes.includes(name);
+      const next = exists
+        ? prev.attributes.filter((n) => n !== name)
+        : [...prev.attributes, name];
 
-    return { ...prev, attributes: next };
-  });
-
-  setAttributeValues((prev) => {
-    const exists = form.attributes.includes(name);
-    if (exists) {
-      // removing → drop its value
-      const { [name]: _, ...rest } = prev;
-      return rest;
-    }
-    // adding → set a default if not present
-    return prev[name] ? prev : { ...prev, [name]: "1" };
-  });
-
-  setErrors((prev) => ({ ...prev, attributes: "" }));
-};
-
-
- const selectAllAttributes = () => {
-  interface Attribute {
-    id: number;
-    name: string;
-    label?: string;
-  }
-
-  const allNames: string[] = (attributes as Attribute[]).map((a) => a.name).filter(Boolean);
-  setForm((prev) => ({ ...prev, attributes: allNames }));
-  setAttributeValues((prev) => {
-    const next = { ...prev };
-    for (const n of allNames) if (!next[n]) next[n] = "1";
-    return next;
-  });
-  setErrors((prev) => ({ ...prev, attributes: "" }));
-};
-
-const clearAllAttributes = () => {
-  setForm((prev) => ({ ...prev, attributes: [] }));
-  setAttributeValues({});
-};
-
-  // const handleSubmit = async () => {
-  //   const newErrors: Record<string, string> = {};
-  //   if (!form.title.trim()) newErrors.title = "Title is required";
-  //   if (!form.price.trim()) newErrors.price = "Price is required";
-  //   if (!form.status) newErrors.status = "Status is required";
-  //   if (form.attributes.length === 0)
-  //     newErrors.attributes = "Select at least one attribute";
-  //   if (!form.estate_id) newErrors.estate_id = "Estate is required";
-  //   if (form.owner_status === null) newErrors.owner_status = "Select ownership";
-
-  //   // If estate doesn't own it → require landlord; tenant optional based on toggle
-  //   if (form.owner_status === false) {
-  //     if (!landlord.name.trim())
-  //       newErrors.landlord_name = "Landlord name is required";
-  //     if (!landlord.email.trim())
-  //       newErrors.landlord_email = "Landlord email is required";
-
-  //     if (form.tenant_status === null) {
-  //       newErrors.tenant_status = "Select if there is a current tenant";
-  //     } else if (form.tenant_status === true) {
-  //       if (!tenant.name.trim())
-  //         newErrors.tenant_name = "Tenant name is required";
-  //       if (!tenant.email.trim())
-  //         newErrors.tenant_email = "Tenant email is required";
-  //     }
-  //   }
-  //   const toNum = (v: string | number) =>
-  //     typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
-  //   const payload: CreateProperty = {
-  //     title: form.title.trim(),
-  //     price: toNum(form.price),
-  //     description: form.description?.trim() || "",
-  //     status: form.status as "available" | "sold" | "rented",
-  //     attributes: form.attributes,
-  //     property_type_id: toNum(form.property_type_id),
-  //     estate_id: toNum(form.estate_id),
-  //     owner_status: Boolean(form.owner_status),
-
-  //     ...(form.owner_status === false
-  //       ? {
-  //           landlord_name: form.landlord_name || landlord.name.trim(),
-  //           landlord_email: form.landlord_email || landlord.email.trim(),
-  //           tenant_status: Boolean(form.tenant_status),
-  //           ...(form.tenant_status
-  //             ? {
-  //                 tenant_name: form.tenant_name || tenant.name.trim(),
-  //                 tenant_email: form.tenant_email || tenant.email.trim(),
-  //               }
-  //             : {}),
-  //         }
-  //       : {
-  //           landlord_name: "",
-  //           landlord_email: "",
-  //           tenant_status: false,
-  //         }),
-  //   };
-
-  //   onAdd(payload);
-
-  //   setForm({
-  //     title: "",
-  //     price: "",
-  //     description: "",
-  //     status: "available",
-  //     property_type_id: 0,
-  //     estate_id: 0,
-  //     attributes: [],
-  //     owner_status: null,
-  //     landlord_name: "",
-  //     landlord_email: "",
-  //     tenant_status: false,
-  //     tenant_name: "",
-  //     tenant_email: "",
-  //   });
-  //   onClose();
-  // };
-const handleSubmit = async () => {
-  const newErrors: Record<string, string> = {};
-
-  // existing validations...
-  if (form.attributes.length === 0) newErrors.attributes = "Select at least one attribute";
-
-  // ensure every selected attribute has a chosen value
-  for (const name of form.attributes) {
-    if (!attributeValues[name]) {
-      newErrors[`attr_${name}`] = `Select a value for ${name}`;
-    }
-  }
-
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-
-  const toNum = (v: string | number) =>
-    typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
-
-  // build attributes payload
-  const attributesPayload = form.attributes
-    .map((name) => {
-      const def = attributes.find((a: { name: string; }) => a.name === name);
-      if (!def) return null;
-      return {
-        id: def.id,
-        value: def.name,              
-        label: attributeValues[name], 
-      };
-    })
-    .filter((x): x is { id: number; value: string; label: string } => Boolean(x));
-
-  const payload: CreateProperty = {
-    title: form.title.trim(),
-    price: toNum(form.price),
-    description: form.description?.trim() || "",
-    status: form.status as "available" | "sold" | "rented",
-    property_type_id: toNum(form.property_type_id),
-    estate_id: toNum(form.estate_id),
-    attributes: attributesPayload, // <-- now the correct shape
-    owner_status: Boolean(form.owner_status),
-
-    ...(form.owner_status === false
-      ? {
-          landlord_name: form.landlord_name || landlord.name.trim(),
-          landlord_email: form.landlord_email || landlord.email.trim(),
-          tenant_status: Boolean(form.tenant_status),
-          ...(form.tenant_status
-            ? {
-                tenant_name: form.tenant_name || tenant.name.trim(),
-                tenant_email: form.tenant_email || tenant.email.trim(),
-              }
-            : {}),
+      // update values in the same tick to avoid stale state
+      setAttributeValues((vals) => {
+        if (exists) {
+          const { [name]: _, ...rest } = vals;
+          return rest;
         }
-      : {
-          landlord_name: "",
-          landlord_email: "",
-          tenant_status: false,
-        }),
+        return vals[name] ? vals : { ...vals, [name]: "1" };
+      });
+
+      return { ...prev, attributes: next };
+    });
+
+    setErrors((prev) => ({ ...prev, attributes: "" }));
   };
 
-  onAdd(payload);
-
-
-  setForm({
-    title: "",
-    price: "",
-    description: "",
-    status: "available",
-    property_type_id: 0,
-    estate_id: 0,
-    attributes: [],
-    owner_status: null,
-    landlord_name: "",
-    landlord_email: "",
-    tenant_status: false,
-    tenant_name: "",
-    tenant_email: "",
+  // Options for per-attribute quantity (1..20); adjust as needed
+  const numberOptions = Array.from({ length: 20 }, (_, i) => {
+    const v = String(i + 1);
+    return { label: v, value: v };
   });
-  setAttributeValues({});
-  onClose();
-};
+
+  const removeAttribute = (name: string) => {
+    setForm((prev) => ({
+      ...prev,
+      attributes: prev.attributes.filter((n) => n !== name),
+    }));
+    setAttributeValues((prev) => {
+      const { [name]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const selectAllAttributes = () => {
+    const allNames = attributes.map((a: { name: any; }) => a.name).filter(Boolean);
+    setForm((prev) => ({ ...prev, attributes: allNames }));
+    setAttributeValues((prev) => {
+      const next = { ...prev };
+      for (const n of allNames) if (!next[n]) next[n] = "1";
+      return next;
+    });
+    setErrors((prev) => ({ ...prev, attributes: "" }));
+  };
+
+  const clearAllAttributes = () => {
+    setForm((prev) => ({ ...prev, attributes: [] }));
+    setAttributeValues({});
+  };
+
+  const handleSubmit = async () => {
+    const newErrors: Record<string, string> = {};
+
+    // Basic validations (extend as needed)
+    if (!form.title.trim()) newErrors.title = "Title is required";
+    if (!String(form.price).trim()) newErrors.price = "Price is required";
+    if (!form.status) newErrors.status = "Status is required";
+    if (form.attributes.length === 0)
+      newErrors.attributes = "Select at least one attribute";
+
+    // ensure every selected attribute has a chosen value
+    for (const name of form.attributes) {
+      if (!attributeValues[name]) {
+        newErrors[`attr_${name}`] = `Select a value for ${name}`;
+      }
+    }
+
+    // if estate is required for admins
+    if (
+      (user?.roles?.includes?.("super admin") ||
+        user?.roles?.includes?.("admin")) &&
+      !form.estate_id
+    ) {
+      newErrors.estate_id = "Estate is required";
+    }
+
+    // ownership branching validations
+    if (form.owner_status === null)
+      newErrors.owner_status = "Please choose an ownership status";
+    if (form.owner_status === false) {
+      if (!(form.landlord_name || landlord.name).trim())
+        newErrors.landlord_name = "Landlord name is required";
+      if (!(form.landlord_email || landlord.email).trim())
+        newErrors.landlord_email = "Landlord email is required";
+      if (form.tenant_status === null)
+        newErrors.tenant_status = "Please indicate if there is a tenant";
+      if (form.tenant_status) {
+        if (!(form.tenant_name || tenant.name).trim())
+          newErrors.tenant_name = "Tenant name is required";
+        if (!(form.tenant_email || tenant.email).trim())
+          newErrors.tenant_email = "Tenant email is required";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const toNum = (v: string | number) =>
+      typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+
+    // build attributes payload
+    const attributesPayload = form.attributes
+      .map((name) => {
+        const def = attributes.find((a: { name: string; }) => a.name === name);
+        if (!def) return null;
+        return {
+          id: def.id,
+          value: def.name, // attribute identifier
+          label: attributeValues[name], // chosen quantity (string)
+          // If your API expects a number or a key named `quantity`:
+          // quantity: Number(attributeValues[name]),
+        };
+      })
+      .filter(
+        (x): x is { id: number; value: string; label: string } => Boolean(x)
+      );
+
+    const payload: CreateProperty = {
+      title: form.title.trim(),
+      price: toNum(form.price),
+      description: form.description?.trim() || "",
+      status: form.status as "available" | "sold" | "rented",
+      property_type_id: toNum(form.property_type_id),
+      estate_id: toNum(form.estate_id),
+      attributes: attributesPayload,
+      owner_status: Boolean(form.owner_status),
+
+      ...(form.owner_status === false
+        ? {
+            landlord_name: form.landlord_name || landlord.name.trim(),
+            landlord_email: form.landlord_email || landlord.email.trim(),
+            tenant_status: Boolean(form.tenant_status),
+            ...(form.tenant_status
+              ? {
+                  tenant_name: form.tenant_name || tenant.name.trim(),
+                  tenant_email: form.tenant_email || tenant.email.trim(),
+                }
+              : {}),
+          }
+        : {
+            landlord_name: "",
+            landlord_email: "",
+            tenant_status: false,
+          }),
+    };
+
+    onAdd(payload);
+
+    // reset form
+    setForm({
+      title: "",
+      price: "",
+      description: "",
+      status: "available",
+      property_type_id: 0,
+      estate_id: 0,
+      attributes: [],
+      owner_status: null,
+      landlord_name: "",
+      landlord_email: "",
+      tenant_status: false,
+      tenant_name: "",
+      tenant_email: "",
+    });
+    setAttributeValues({});
+    onClose();
+  };
 
   return (
     <div
@@ -407,8 +384,9 @@ const handleSubmit = async () => {
               ]}
               error={errors.status}
             />
-            {(user?.roles.includes("super admin") ||
-              user?.roles.includes("admin")) && (
+
+            {(user?.roles?.includes?.("super admin") ||
+              user?.roles?.includes?.("admin")) && (
               <SelectField
                 id="estate_id"
                 label="Estates"
@@ -426,7 +404,7 @@ const handleSubmit = async () => {
             )}
           </div>
 
-          {/* ✅ Attributes (checkbox grid) — appears BEFORE ownership question */}
+          {/* Attributes (checkbox grid) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700">
@@ -443,7 +421,7 @@ const handleSubmit = async () => {
                 <button
                   type="button"
                   onClick={clearAllAttributes}
-                  className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
+                  className="text-xs px-2 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
                   disabled={form.attributes.length === 0}
                 >
                   Clear
@@ -452,7 +430,7 @@ const handleSubmit = async () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {attributes.map((attr: any) => {
+              {attributes.map((attr: { name: string; label: string; }) => {
                 const name = attr?.name as string;
                 const label = attr?.label ?? name;
                 const checked = form.attributes.includes(name);
@@ -476,8 +454,54 @@ const handleSubmit = async () => {
             {errors.attributes && (
               <p className="mt-1 text-xs text-red-600">{errors.attributes}</p>
             )}
+
+            {/* Selected attribute editors (turn each selected attribute into a SelectField) */}
+            {form.attributes.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <h4 className="text-sm font-medium text-gray-700">
+                  Selected Attributes
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {form.attributes.map((name) => {
+                    const def = attributes.find((a: { name: string; }) => a?.name === name);
+                    const label = def?.label ?? name;
+                    const value = attributeValues[name] ?? "";
+
+                    return (
+                      <div key={name} className="relative">
+                        <SelectField
+                          id={`attr_${name}`}
+                          label={label}
+                          value={value}
+                          onChange={(v) =>
+                            setAttributeValues((prev) => ({
+                              ...prev,
+                              [name]: String(v),
+                            }))
+                          }
+                          placeholder="Select quantity"
+                          options={numberOptions}
+                          error={errors[`attr_${name}`]}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeAttribute(name)}
+                          className="absolute top-2 right-2 p-1 rounded hover:bg-gray-100 text-gray-500"
+                          aria-label={`Remove ${label}`}
+                          title={`Remove ${label}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Ownership */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Does the estate own this property?
@@ -592,3 +616,94 @@ const handleSubmit = async () => {
 };
 
 export default AddProperty;
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // const handleSubmit = async () => {
+
+  //   const newErrors: Record<string, string> = {};
+  //   if (!form.title.trim()) newErrors.title = "Title is required";
+  //   if (!form.price.trim()) newErrors.price = "Price is required";
+  //   if (!form.status) newErrors.status = "Status is required";
+  //   if (form.attributes.length === 0)
+  //     newErrors.attributes = "Select at least one attribute";
+  //   if (!form.estate_id) newErrors.estate_id = "Estate is required";
+  //   if (form.owner_status === null) newErrors.owner_status = "Select ownership";
+
+  //   // If estate doesn't own it → require landlord; tenant optional based on toggle
+  //   if (form.owner_status === false) {
+  //     if (!landlord.name.trim())
+  //       newErrors.landlord_name = "Landlord name is required";
+  //     if (!landlord.email.trim())
+  //       newErrors.landlord_email = "Landlord email is required";
+
+  //     if (form.tenant_status === null) {
+  //       newErrors.tenant_status = "Select if there is a current tenant";
+  //     } else if (form.tenant_status === true) {
+  //       if (!tenant.name.trim())
+  //         newErrors.tenant_name = "Tenant name is required";
+  //       if (!tenant.email.trim())
+  //         newErrors.tenant_email = "Tenant email is required";
+  //     }
+  //   }
+  //   const toNum = (v: string | number) =>
+  //     typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+  //   const payload: CreateProperty = {
+  //     title: form.title.trim(),
+  //     price: toNum(form.price),
+  //     description: form.description?.trim() || "",
+  //     status: form.status as "available" | "sold" | "rented",
+  //     attributes: form.attributes,
+  //     property_type_id: toNum(form.property_type_id),
+  //     estate_id: toNum(form.estate_id),
+  //     owner_status: Boolean(form.owner_status),
+
+  //     ...(form.owner_status === false
+  //       ? {
+  //           landlord_name: form.landlord_name || landlord.name.trim(),
+  //           landlord_email: form.landlord_email || landlord.email.trim(),
+  //           tenant_status: Boolean(form.tenant_status),
+  //           ...(form.tenant_status
+  //             ? {
+  //                 tenant_name: form.tenant_name || tenant.name.trim(),
+  //                 tenant_email: form.tenant_email || tenant.email.trim(),
+  //               }
+  //             : {}),
+  //         }
+  //       : {
+  //           landlord_name: "",
+  //           landlord_email: "",
+  //           tenant_status: false,
+  //         }),
+  //   };
+
+  //   onAdd(payload);
+
+  //   setForm({
+  //     title: "",
+  //     price: "",
+  //     description: "",
+  //     status: "available",
+  //     property_type_id: 0,
+  //     estate_id: 0,
+  //     attributes: [],
+  //     owner_status: null,
+  //     landlord_name: "",
+  //     landlord_email: "",
+  //     tenant_status: false,
+  //     tenant_name: "",
+  //     tenant_email: "",
+  //   });
+  //   onClose();
+  // };
+

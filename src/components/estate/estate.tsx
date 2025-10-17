@@ -158,18 +158,19 @@ const Estate: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-6">
-        {isLoading ? (
-          <TableSkeleton rows={8} showActions />
-        ) : (
-          <EstateTable
-            estates={filteredEstates}
-            canDelete={role === "super admin"}
-            onView={(estate) => setSelectedEstateId(String(estate.id))}
-            onDelete={handleAskDelete}
-          />
-        )}
-      </div>
+    <div className="mt-6">
+  {isLoading ? (
+    <TableSkeleton rows={8} showActions />
+  ) : filteredEstates.length > 0 ? (
+    <EstateTable
+      estates={filteredEstates}
+      canDelete={role === "super admin"}
+      onView={(estate) => setSelectedEstateId(String(estate.id))}
+      onDelete={handleAskDelete}
+    />
+  ) : null}
+</div>
+
 
       <AddEstateModal
         isOpen={isAddModalOpen}
